@@ -61,6 +61,7 @@ class GUIForm(QtGui.QMainWindow):
         self.lastevent=[]
         self.lastClicked=[]
         self.hasbaselinebeenset=0
+        self.lastevent=0
 
  
     def Load(self): 
@@ -273,11 +274,17 @@ class GUIForm(QtGui.QMainWindow):
         self.ui.eventplot.plotItem.addLine(y=self.baseline-self.deli[eventnumber],pen=(173,27,183))
 
 
-        if self.lastevent==[]:
-            self.p2.addPoints(np.log10(self.dwell),self.deli, symbol='o',brush='b')
-        else:        
-            self.p2.addPoints([np.log10(self.dwell[self.lastevent]),np.log10(self.dwell[self.lastevent])],[self.deli[self.lastevent],self.deli[self.lastevent]], symbol='o',brush='b')
-        self.p2.addPoints(x=[np.log10(self.dwell[eventnumber]),np.log10(self.dwell[eventnumber])],y=[self.deli[eventnumber],self.deli[eventnumber]], symbol='o',brush='r')
+#        if self.lastevent==[]:
+#            self.p2.addPoints(np.log10(self.dwell),self.deli, symbol='o',brush='b')
+#        else:        
+#            self.p2.addPoints([np.log10(self.dwell[self.lastevent]),np.log10(self.dwell[self.lastevent])],[self.deli[self.lastevent],self.deli[self.lastevent]], symbol='o',brush='b')
+#        self.p2.addPoints(x=[np.log10(self.dwell[eventnumber]),np.log10(self.dwell[eventnumber])],y=[self.deli[eventnumber],self.deli[eventnumber]], symbol='o',brush='r')
+        i=0
+        self.p2.setBrush('b') 
+        while i< numberofevents:
+            self.p2.data[i][5]='b'
+            i=i+1
+        self.p2.data[eventnumber][5]='r'
         self.ui.scatterplot.update()
 
         self.ui.eventplot.plot([self.t[startpoints[eventnumber]], self.t[startpoints[eventnumber]]],[self.data[startpoints[eventnumber]], self.data[startpoints[eventnumber]]],pen=None, symbol='o',symbolBrush='g',symbolSize=5)
@@ -303,15 +310,13 @@ class GUIForm(QtGui.QMainWindow):
         self.ui.eventnumberentry.setText(str(eventnumber))
         
         #cant plot only one item? so I doubled it
-
-#        self.p2.plot(self.dwell,self.deli,pen=None, symbol='o',symbolBrush='b',symbolSize=10)
-#        self.p2.plot([self.dwell[eventnumber],self.dwell[eventnumber]],[self.deli[eventnumber],self.deli[eventnumber]],pen=None, symbol='o',symbolBrush='r',symbolSize=10)
-
-        if self.lastevent==[]:
-            self.p2.addPoints(np.log10(self.dwell),self.deli, symbol='o',brush='b')
-        else:        
-            self.p2.addPoints([np.log10(self.dwell[self.lastevent]),np.log10(self.dwell[self.lastevent])],[self.deli[self.lastevent],self.deli[self.lastevent]], symbol='o',brush='b')
-        self.p2.addPoints(x=[np.log10(self.dwell[eventnumber]),np.log10(self.dwell[eventnumber])],y=[self.deli[eventnumber],self.deli[eventnumber]], symbol='o',brush='r')
+        
+        i=0
+        self.p2.setBrush('b') 
+        while i< numberofevents:
+            self.p2.data[i][5]='b'
+            i=i+1
+        self.p2.data[eventnumber][5]='r'
         self.ui.scatterplot.update()
 
         self.ui.eventplot.plot([self.t[startpoints[eventnumber]], self.t[startpoints[eventnumber]]],[self.data[startpoints[eventnumber]], self.data[startpoints[eventnumber]]],pen=None, symbol='o',symbolBrush='g',symbolSize=5)
@@ -333,15 +338,12 @@ class GUIForm(QtGui.QMainWindow):
         self.ui.eventplot.plotItem.addLine(y=self.baseline-self.deli[eventnumber],pen=(173,27,183))
         self.ui.eventnumberentry.setText(str(eventnumber)  )
 
-
-#        self.p2.plot(self.dwell,self.deli,pen=None, symbol='o',symbolBrush='b',symbolSize=10)
-#        self.p2.plot([self.dwell[eventnumber],self.dwell[eventnumber]],[self.deli[eventnumber],self.deli[eventnumber]],pen=None, symbol='o',symbolBrush='r',symbolSize=10)
-
-        if self.lastevent==[]:
-            self.p2.addPoints(np.log10(self.dwell),self.deli, symbol='o',brush='b')
-        else:        
-            self.p2.addPoints([np.log10(self.dwell[self.lastevent]),np.log10(self.dwell[self.lastevent])],[self.deli[self.lastevent],self.deli[self.lastevent]], symbol='o',brush='b')
-        self.p2.addPoints(x=[np.log10(self.dwell[eventnumber]),np.log10(self.dwell[eventnumber])],y=[self.deli[eventnumber],self.deli[eventnumber]], symbol='o',brush='r')
+        i=0
+        self.p2.setBrush('b') 
+        while i< numberofevents:
+            self.p2.data[i][5]='b'
+            i=i+1
+        self.p2.data[eventnumber][5]='r'
         self.ui.scatterplot.update()
 
         self.ui.eventplot.plot([self.t[startpoints[eventnumber]], self.t[startpoints[eventnumber]]],[self.data[startpoints[eventnumber]], self.data[startpoints[eventnumber]]],pen=None, symbol='o',symbolBrush='g',symbolSize=5)
@@ -448,23 +450,23 @@ class GUIForm(QtGui.QMainWindow):
         self.p1.addLine(y=self.baseline,pen='g')
         self.p1.addLine(y=self.threshold,pen='r')
         
-#    def clicked(self, points):
-#        for p in self.lastClicked:
-#            p.resetPen()
-#        print("clicked points", points)
-#        for p in points:
-#            p.setPen('b', width=2)
-#        self.lastClicked = points
         
-    def clicked(SpotItem, points):
-        print points
-#        print self.p2.points
-##        self.p=p in points 
-##        print("clicked points", points)
-#        test=self.p2.points()
-#        for p in test:
-#            p.setPen('r')
-##        self.lastClicked = points
+    def clicked(self, plot, points):
+        eventnumber=np.int(self.ui.eventnumberentry.text())
+        self.p2.data[eventnumber][5]=('b')           
+        for p in points:
+            p.setBrush('r')
+        self.lastClicked = points
+        i=0
+        while i < len(self.dt) :
+            if self.p2.data[i][5]=='b' or self.p2.data[i][5]==None:
+                i=i+1
+            else:
+                self.ui.eventnumberentry.setText(str(i))
+                self.inspectevent()                
+                i=len(self.dt)
+                
+        
             
     def concatenatetext(self):
         if self.direc==[]:
