@@ -240,6 +240,7 @@ class GUIForm(QtGui.QMainWindow):
         self.dwell=self.dwell[self.dwell!=0]
         self.dt=self.dt[self.dt!=0]
         self.dt=np.append(0,self.dt)
+        self.frac=self.deli/self.baseline
         
 #        print self.dwell, self.deli, self.dt
         
@@ -259,7 +260,7 @@ class GUIForm(QtGui.QMainWindow):
         
 
     def save(self):  
-         np.savetxt(self.matfilename+'DB.txt',np.column_stack((self.deli,self.dwell,self.dt)),delimiter='\t')
+         np.savetxt(self.matfilename+'DB.txt',np.column_stack((self.deli,self.frac,self.dwell,self.dt)),delimiter='\t')
 
     def inspectevent(self):
         numberofevents=len(self.dt)
@@ -474,7 +475,7 @@ class GUIForm(QtGui.QMainWindow):
             self.direc=os.path.dirname(str(textfilenames[0]))            
         else:
             textfilenames =QtGui.QFileDialog.getOpenFileNames(self, 'Open file',self.direc,'*.txt') 
-        
+            self.direc=os.path.dirname(str(textfilenames[0]))
         i=0
         while i<len(textfilenames):
             temptextdata=np.fromfile(str(textfilenames[i]),sep='\t')
@@ -485,7 +486,7 @@ class GUIForm(QtGui.QMainWindow):
                 newtextdata=np.concatenate((newtextdata,temptextdata))
             i=i+1
          
-        newfilename = QtGui.QFileDialog.getSaveFileName(self, 'New File name','*.txt') 
+        newfilename = QtGui.QFileDialog.getSaveFileName(self, 'New File name',self.direc,'*.txt') 
         np.savetxt(str(newfilename),newtextdata,delimiter='\t')
 
     def nextfile(self):
