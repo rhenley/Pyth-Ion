@@ -33,10 +33,6 @@ class GUIForm(QtGui.QMainWindow):
         QtCore.QObject.connect(self.ui.previousbutton, QtCore.SIGNAL('clicked()'), self.previousevent)
         QtCore.QObject.connect(self.ui.nextbutton, QtCore.SIGNAL('clicked()'), self.nextevent)
                 
-        
-        
-        self.ui.eventplot.setLabel('bottom', text='Time', units= u'μs')
-        self.ui.eventplot.setLabel('left', text='Current', units='nA')
 
         self.ui.signalplot.setBackground('w')
         self.ui.scatterplot.setBackground('w')
@@ -55,6 +51,18 @@ class GUIForm(QtGui.QMainWindow):
         self.w1.setLabel('bottom', text='Time', units=u'μs')
         self.w1.setLabel('left', text='Current', units='nA')
         self.w1.setLogMode(x=True,y=False)
+        
+        self.p3=self.ui.eventplot.addPlot()
+        self.p3.setLabel('bottom', text='Time', units=u'μs')
+        self.p3.setLabel('left', text='Current', units='nA')
+        self.p3.hideAxis('bottom')
+        self.p3.hideAxis('left')
+        
+        
+        logo=sp.ndimage.imread(os.getcwd()+"\pythionlogo1.png")
+        logo=np.rot90(logo,-1)
+        logo=pg.ImageItem(logo)
+        self.p3.addItem(logo)
         
         self.direc=[]
         self.lr=[]
@@ -263,17 +271,18 @@ class GUIForm(QtGui.QMainWindow):
          np.savetxt(self.matfilename+'DB.txt',np.column_stack((self.deli,self.frac,self.dwell,self.dt)),delimiter='\t')
 
     def inspectevent(self):
+        self.p3.showAxis('bottom')
+        self.p3.showAxis('left')
         numberofevents=len(self.dt)
-        self.ui.eventplot.plotItem.clear()
+        self.p3.clear()
         
         eventbuffer=np.int(self.ui.eventbufferentry.text())
         eventnumber=np.int(self.ui.eventnumberentry.text())
         if eventnumber>numberofevents:
             eventnumber=numberofevents-1
             self.ui.eventnumberentry.setText(str(eventnumber))
-        self.ui.eventplot.plot(self.t[startpoints[eventnumber]-eventbuffer:endpoints[eventnumber]+eventbuffer],self.data[startpoints[eventnumber]-eventbuffer:endpoints[eventnumber]+eventbuffer],pen='b')
-        self.ui.eventplot.plotItem.addLine(y=self.baseline-self.deli[eventnumber],pen=(173,27,183))
-
+        self.p3.plot(self.t[startpoints[eventnumber]-eventbuffer:endpoints[eventnumber]+eventbuffer],self.data[startpoints[eventnumber]-eventbuffer:endpoints[eventnumber]+eventbuffer],pen='b')
+        self.p3.addLine(y=self.baseline-self.deli[eventnumber],pen=(173,27,183))
 
 #        if self.lastevent==[]:
 #            self.p2.addPoints(np.log10(self.dwell),self.deli, symbol='o',brush='b')
@@ -288,15 +297,17 @@ class GUIForm(QtGui.QMainWindow):
         self.p2.data[eventnumber][5]='r'
         self.ui.scatterplot.update()
 
-        self.ui.eventplot.plot([self.t[startpoints[eventnumber]], self.t[startpoints[eventnumber]]],[self.data[startpoints[eventnumber]], self.data[startpoints[eventnumber]]],pen=None, symbol='o',symbolBrush='g',symbolSize=5)
-        self.ui.eventplot.plot([self.t[endpoints[eventnumber]], self.t[endpoints[eventnumber]]],[self.data[endpoints[eventnumber]], self.data[endpoints[eventnumber]]],pen=None, symbol='o',symbolBrush='r',symbolSize=5)
+        self.p3.plot([self.t[startpoints[eventnumber]], self.t[startpoints[eventnumber]]],[self.data[startpoints[eventnumber]], self.data[startpoints[eventnumber]]],pen=None, symbol='o',symbolBrush='g',symbolSize=5)
+        self.p3.plot([self.t[endpoints[eventnumber]], self.t[endpoints[eventnumber]]],[self.data[endpoints[eventnumber]], self.data[endpoints[eventnumber]]],pen=None, symbol='o',symbolBrush='r',symbolSize=5)
 
         self.ui.eventinfolabel.setText('Dwell Time=' + str(round(self.dwell[eventnumber],2))+ u' μs,   Deli='+str(round(self.deli[eventnumber],2)) +' nA')
         self.lastevent=eventnumber
         
     def nextevent(self):
+        self.p3.showAxis('bottom')
+        self.p3.showAxis('left')
         numberofevents=len(self.dt)
-        self.ui.eventplot.plotItem.clear()
+        self.p3.clear()
         eventnumber=np.int(self.ui.eventnumberentry.text())
         eventbuffer=np.int(self.ui.eventbufferentry.text())
 
@@ -306,8 +317,8 @@ class GUIForm(QtGui.QMainWindow):
         else:
             eventnumber=np.int(self.ui.eventnumberentry.text())+1  
 
-        self.ui.eventplot.plot(self.t[startpoints[eventnumber]-eventbuffer:endpoints[eventnumber]+eventbuffer],self.data[startpoints[eventnumber]-eventbuffer:endpoints[eventnumber]+eventbuffer],pen='b')
-        self.ui.eventplot.plotItem.addLine(y=self.baseline-self.deli[eventnumber],pen=(173,27,183))
+        self.p3.plot(self.t[startpoints[eventnumber]-eventbuffer:endpoints[eventnumber]+eventbuffer],self.data[startpoints[eventnumber]-eventbuffer:endpoints[eventnumber]+eventbuffer],pen='b')
+        self.p3.addLine(y=self.baseline-self.deli[eventnumber],pen=(173,27,183))
         self.ui.eventnumberentry.setText(str(eventnumber))
         
         #cant plot only one item? so I doubled it
@@ -320,23 +331,25 @@ class GUIForm(QtGui.QMainWindow):
         self.p2.data[eventnumber][5]='r'
         self.ui.scatterplot.update()
 
-        self.ui.eventplot.plot([self.t[startpoints[eventnumber]], self.t[startpoints[eventnumber]]],[self.data[startpoints[eventnumber]], self.data[startpoints[eventnumber]]],pen=None, symbol='o',symbolBrush='g',symbolSize=5)
-        self.ui.eventplot.plot([self.t[endpoints[eventnumber]], self.t[endpoints[eventnumber]]],[self.data[endpoints[eventnumber]], self.data[endpoints[eventnumber]]],pen=None, symbol='o',symbolBrush='r',symbolSize=5)
+        self.p3.plot([self.t[startpoints[eventnumber]], self.t[startpoints[eventnumber]]],[self.data[startpoints[eventnumber]], self.data[startpoints[eventnumber]]],pen=None, symbol='o',symbolBrush='g',symbolSize=5)
+        self.p3.plot([self.t[endpoints[eventnumber]], self.t[endpoints[eventnumber]]],[self.data[endpoints[eventnumber]], self.data[endpoints[eventnumber]]],pen=None, symbol='o',symbolBrush='r',symbolSize=5)
 
         self.ui.eventinfolabel.setText('Dwell Time=' + str(round(self.dwell[eventnumber],2))+ u' μs,   Deli='+str(round(self.deli[eventnumber],2)) +' nA')
         self.lastevent=eventnumber
         
     def previousevent(self):      
+        self.p3.showAxis('bottom')
+        self.p3.showAxis('left')
         numberofevents=len(self.dt)
-        self.ui.eventplot.plotItem.clear()
+        self.p3.clear()
         eventbuffer=np.int(self.ui.eventbufferentry.text())
         
         
         eventnumber=np.int(self.ui.eventnumberentry.text())-1
         if eventnumber<0:
             eventnumber=numberofevents-1
-        self.ui.eventplot.plot(self.t[startpoints[eventnumber]-eventbuffer:endpoints[eventnumber]+eventbuffer],self.data[startpoints[eventnumber]-eventbuffer:endpoints[eventnumber]+eventbuffer],pen='b')
-        self.ui.eventplot.plotItem.addLine(y=self.baseline-self.deli[eventnumber],pen=(173,27,183))
+        self.p3.plot(self.t[startpoints[eventnumber]-eventbuffer:endpoints[eventnumber]+eventbuffer],self.data[startpoints[eventnumber]-eventbuffer:endpoints[eventnumber]+eventbuffer],pen='b')
+        self.p3.addLine(y=self.baseline-self.deli[eventnumber],pen=(173,27,183))
         self.ui.eventnumberentry.setText(str(eventnumber)  )
 
         i=0
@@ -347,8 +360,8 @@ class GUIForm(QtGui.QMainWindow):
         self.p2.data[eventnumber][5]='r'
         self.ui.scatterplot.update()
 
-        self.ui.eventplot.plot([self.t[startpoints[eventnumber]], self.t[startpoints[eventnumber]]],[self.data[startpoints[eventnumber]], self.data[startpoints[eventnumber]]],pen=None, symbol='o',symbolBrush='g',symbolSize=5)
-        self.ui.eventplot.plot([self.t[endpoints[eventnumber]], self.t[endpoints[eventnumber]]],[self.data[endpoints[eventnumber]], self.data[endpoints[eventnumber]]],pen=None, symbol='o',symbolBrush='r',symbolSize=5)
+        self.p3.plot([self.t[startpoints[eventnumber]], self.t[startpoints[eventnumber]]],[self.data[startpoints[eventnumber]], self.data[startpoints[eventnumber]]],pen=None, symbol='o',symbolBrush='g',symbolSize=5)
+        self.p3.plot([self.t[endpoints[eventnumber]], self.t[endpoints[eventnumber]]],[self.data[endpoints[eventnumber]], self.data[endpoints[eventnumber]]],pen=None, symbol='o',symbolBrush='r',symbolSize=5)
 
         self.ui.eventinfolabel.setText('Dwell Time=' + str(round(self.dwell[eventnumber],2))+ u' μs,   Deli='+str(round(self.deli[eventnumber],2)) +' nA')
         self.lastevent=eventnumber
@@ -421,11 +434,14 @@ class GUIForm(QtGui.QMainWindow):
         self.ui.eventcounterlabel.setText('Events:'+str(numberofevents))
  
 
-        self.ui.eventplot.plotItem.clear()
+        self.p3.clear()
+        self.p3.showAxis('bottom')
+        self.p3.showAxis('left')        
+        
         self.p2.setData(x=[],y=[])
         
-        self.ui.eventplot.plot(self.t[startpoints[eventnumber]-1000:endpoints[eventnumber]+1000]*1e6,self.data[startpoints[eventnumber]-1000:endpoints[eventnumber]+1000],pen='b')
-        self.ui.eventplot.plotItem.addLine(y=self.baseline-self.deli[eventnumber],pen=(173,27,183))
+        self.p3.plot(self.t[startpoints[eventnumber]-1000:endpoints[eventnumber]+1000]*1e6,self.data[startpoints[eventnumber]-1000:endpoints[eventnumber]+1000],pen='b')
+        self.p3.addLine(y=self.baseline-self.deli[eventnumber],pen=(173,27,183))
 
 #        self.p2.addPoints(x=np.log10(self.dwell),y=self.deli, symbol='o',brush='b')
 #        self.p2.addPoints(x=[np.log10(self.dwell[eventnumber]),np.log10(self.dwell[eventnumber])],y=[self.deli[eventnumber],self.deli[eventnumber]], symbol='o',brush='r')
@@ -435,8 +451,8 @@ class GUIForm(QtGui.QMainWindow):
         self.ui.scatterplot.update()
 
         self.ui.scatterplot.update()
-        self.ui.eventplot.plot([self.t[startpoints[eventnumber]]*1e6, self.t[startpoints[eventnumber]]*1e6],[self.data[startpoints[eventnumber]], self.data[startpoints[eventnumber]]],pen=None, symbol='o',symbolBrush='g',symbolSize=5)
-        self.ui.eventplot.plot([self.t[endpoints[eventnumber]]*1e6, self.t[endpoints[eventnumber]]*1e6],[self.data[endpoints[eventnumber]], self.data[endpoints[eventnumber]]],pen=None, symbol='o',symbolBrush='r',symbolSize=5)
+        self.p3.plot([self.t[startpoints[eventnumber]]*1e6, self.t[startpoints[eventnumber]]*1e6],[self.data[startpoints[eventnumber]], self.data[startpoints[eventnumber]]],pen=None, symbol='o',symbolBrush='g',symbolSize=5)
+        self.p3.plot([self.t[endpoints[eventnumber]]*1e6, self.t[endpoints[eventnumber]]*1e6],[self.data[endpoints[eventnumber]], self.data[endpoints[eventnumber]]],pen=None, symbol='o',symbolBrush='r',symbolSize=5)
         self.lastevent=eventnumber        
         
     def invertdata(self):

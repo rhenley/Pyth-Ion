@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'plotgui.ui'
 #
-# Created: Tue Oct 07 15:50:42 2014
+# Created: Tue Oct 14 15:20:09 2014
 #      by: PyQt4 UI code generator 4.9.6
 #
 # WARNING! All changes made in this file will be lost!
@@ -75,7 +75,7 @@ class Ui_NanoPython(object):
         self.horizontalLayout_3 = QtGui.QHBoxLayout(self.horizontalLayoutWidget_2)
         self.horizontalLayout_3.setMargin(0)
         self.horizontalLayout_3.setObjectName(_fromUtf8("horizontalLayout_3"))
-        self.eventplot = PlotWidget(self.horizontalLayoutWidget_2)
+        self.eventplot = GraphicsLayoutWidget(self.horizontalLayoutWidget_2)
         sizePolicy = QtGui.QSizePolicy(QtGui.QSizePolicy.Expanding, QtGui.QSizePolicy.Expanding)
         sizePolicy.setHorizontalStretch(0)
         sizePolicy.setVerticalStretch(0)
@@ -230,7 +230,7 @@ class Ui_NanoPython(object):
         self.eventinfolabel.setObjectName(_fromUtf8("eventinfolabel"))
         self.groupBox_4 = QtGui.QGroupBox(self.centralwidget)
         self.groupBox_4.setEnabled(True)
-        self.groupBox_4.setGeometry(QtCore.QRect(960, 10, 111, 111))
+        self.groupBox_4.setGeometry(QtCore.QRect(960, 10, 111, 121))
         sizePolicy = QtGui.QSizePolicy(QtGui.QSizePolicy.Preferred, QtGui.QSizePolicy.Preferred)
         sizePolicy.setHorizontalStretch(0)
         sizePolicy.setVerticalStretch(0)
@@ -243,7 +243,7 @@ class Ui_NanoPython(object):
         self.groupBox_4.setAlignment(QtCore.Qt.AlignJustify|QtCore.Qt.AlignVCenter)
         self.groupBox_4.setObjectName(_fromUtf8("groupBox_4"))
         self.verticalLayoutWidget_6 = QtGui.QWidget(self.groupBox_4)
-        self.verticalLayoutWidget_6.setGeometry(QtCore.QRect(10, 10, 91, 91))
+        self.verticalLayoutWidget_6.setGeometry(QtCore.QRect(10, 10, 91, 112))
         self.verticalLayoutWidget_6.setObjectName(_fromUtf8("verticalLayoutWidget_6"))
         self.verticalLayout_7 = QtGui.QVBoxLayout(self.verticalLayoutWidget_6)
         self.verticalLayout_7.setMargin(0)
@@ -314,4 +314,4 @@ class Ui_NanoPython(object):
         self.actionInvert.setText(_translate("NanoPython", "Invert data", None))
         self.actionsetbuffer.setText(_translate("NanoPython", "Set Event Buffer Size", None))
 
-from pyqtgraph import GraphicsLayoutWidget, PlotWidget
+from pyqtgraph import GraphicsLayoutWidget
