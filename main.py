@@ -432,6 +432,7 @@ class GUIForm(QtGui.QMainWindow):
         self.deli=np.delete(self.deli,eventnumber)
         self.dwell=np.delete(self.dwell,eventnumber)
         self.dt=np.delete(self.dt,eventnumber)
+        self.frac=np.delete(self.frac,eventnumber)
         startpoints=np.delete(startpoints,eventnumber)
         endpoints=np.delete(endpoints,eventnumber)
         numberofevents=len(self.dt)
