@@ -500,7 +500,7 @@ class GUIForm(QtGui.QMainWindow):
         i=0
         while i<len(textfilenames):
             temptextdata=np.fromfile(str(textfilenames[i]),sep='\t')
-            temptextdata=np.reshape(temptextdata,(len(temptextdata)/3,3))
+            temptextdata=np.reshape(temptextdata,(len(temptextdata)/4,4))
             if i==0:
                 newtextdata=temptextdata
             else:
