@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'plotgui.ui'
 #
-# Created: Tue Oct 14 15:20:09 2014
+# Created: Wed Oct 15 10:26:48 2014
 #      by: PyQt4 UI code generator 4.9.6
 #
 # WARNING! All changes made in this file will be lost!
@@ -243,7 +243,7 @@ class Ui_NanoPython(object):
         self.groupBox_4.setAlignment(QtCore.Qt.AlignJustify|QtCore.Qt.AlignVCenter)
         self.groupBox_4.setObjectName(_fromUtf8("groupBox_4"))
         self.verticalLayoutWidget_6 = QtGui.QWidget(self.groupBox_4)
-        self.verticalLayoutWidget_6.setGeometry(QtCore.QRect(10, 10, 91, 112))
+        self.verticalLayoutWidget_6.setGeometry(QtCore.QRect(10, 10, 91, 101))
         self.verticalLayoutWidget_6.setObjectName(_fromUtf8("verticalLayoutWidget_6"))
         self.verticalLayout_7 = QtGui.QVBoxLayout(self.verticalLayoutWidget_6)
         self.verticalLayout_7.setMargin(0)

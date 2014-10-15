@@ -59,10 +59,10 @@ class GUIForm(QtGui.QMainWindow):
         self.p3.hideAxis('left')
         
         
-        logo=sp.ndimage.imread(os.getcwd()+"\pythionlogo1.png")
-        logo=np.rot90(logo,-1)
-        logo=pg.ImageItem(logo)
-        self.p3.addItem(logo)
+        self.logo=sp.ndimage.imread(os.getcwd()+"\pythionlogo.png")
+        self.logo=np.rot90(self.logo,-1)
+        self.logo=pg.ImageItem(self.logo)
+        self.p3.addItem(self.logo)
         
         self.direc=[]
         self.lr=[]
@@ -74,6 +74,10 @@ class GUIForm(QtGui.QMainWindow):
  
     def Load(self): 
         self.p1.clear()
+        self.p3.clear()
+        self.p3.hideAxis('bottom')
+        self.p3.hideAxis('left')
+        self.p3.addItem(self.logo)
         self.data=np.fromfile(self.datafilename,self.CHIMERAfile) 
         
         self.LPfiltercutoff = np.float64(self.ui.LPentry.text())*1000
