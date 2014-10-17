@@ -70,6 +70,10 @@ class GUIForm(QtGui.QMainWindow):
         self.lastClicked=[]
         self.hasbaselinebeenset=0
         self.lastevent=0
+        self.deli=[]
+        self.frac=[]
+        self.dwell=[]
+        self.dt=[]
 
  
     def Load(self): 
@@ -78,6 +82,12 @@ class GUIForm(QtGui.QMainWindow):
         self.p3.hideAxis('bottom')
         self.p3.hideAxis('left')
         self.p3.addItem(self.logo)
+        self.totalplotpoints=len(self.p2.data)
+
+        colors=[]
+        colors[0:self.totalplotpoints]=[.5]*self.totalplotpoints
+        self.p2.setBrush(colors, mask=None)                  
+        
         self.data=np.fromfile(self.datafilename,self.CHIMERAfile) 
         
         self.LPfiltercutoff = np.float64(self.ui.LPentry.text())*1000
@@ -277,29 +287,23 @@ class GUIForm(QtGui.QMainWindow):
     def inspectevent(self):
         self.p3.showAxis('bottom')
         self.p3.showAxis('left')
-        numberofevents=len(self.dt)
+        self.numberofevents=len(self.dt)
+        self.totalplotpoints=len(self.p2.data)
         self.p3.clear()
         
         eventbuffer=np.int(self.ui.eventbufferentry.text())
         eventnumber=np.int(self.ui.eventnumberentry.text())
-        if eventnumber>numberofevents:
-            eventnumber=numberofevents-1
+        if eventnumber>self.numberofevents:
+            eventnumber=self.numberofevents-1
             self.ui.eventnumberentry.setText(str(eventnumber))
         self.p3.plot(self.t[startpoints[eventnumber]-eventbuffer:endpoints[eventnumber]+eventbuffer],self.data[startpoints[eventnumber]-eventbuffer:endpoints[eventnumber]+eventbuffer],pen='b')
         self.p3.addLine(y=self.baseline-self.deli[eventnumber],pen=(173,27,183))
 
-#        if self.lastevent==[]:
-#            self.p2.addPoints(np.log10(self.dwell),self.deli, symbol='o',brush='b')
-#        else:        
-#            self.p2.addPoints([np.log10(self.dwell[self.lastevent]),np.log10(self.dwell[self.lastevent])],[self.deli[self.lastevent],self.deli[self.lastevent]], symbol='o',brush='b')
-#        self.p2.addPoints(x=[np.log10(self.dwell[eventnumber]),np.log10(self.dwell[eventnumber])],y=[self.deli[eventnumber],self.deli[eventnumber]], symbol='o',brush='r')
-        i=0
-        self.p2.setBrush('b') 
-        while i< numberofevents:
-            self.p2.data[i][5]='b'
-            i=i+1
-        self.p2.data[eventnumber][5]='r'
-        self.ui.scatterplot.update()
+        colors=[]
+        colors[0:self.totalplotpoints-self.numberofevents]=[.5]*self.totalplotpoints
+        colors[self.totalplotpoints-self.numberofevents:self.totalplotpoints]=['b']*self.numberofevents
+        colors[self.totalplotpoints-self.numberofevents+eventnumber]='r'
+        self.p2.setBrush(colors, mask=None)
 
         self.p3.plot([self.t[startpoints[eventnumber]], self.t[startpoints[eventnumber]]],[self.data[startpoints[eventnumber]], self.data[startpoints[eventnumber]]],pen=None, symbol='o',symbolBrush='g',symbolSize=5)
         self.p3.plot([self.t[endpoints[eventnumber]], self.t[endpoints[eventnumber]]],[self.data[endpoints[eventnumber]], self.data[endpoints[eventnumber]]],pen=None, symbol='o',symbolBrush='r',symbolSize=5)
@@ -310,13 +314,14 @@ class GUIForm(QtGui.QMainWindow):
     def nextevent(self):
         self.p3.showAxis('bottom')
         self.p3.showAxis('left')
-        numberofevents=len(self.dt)
+        self.numberofevents=len(self.dt)
+        self.totalplotpoints=len(self.p2.data)
         self.p3.clear()
         eventnumber=np.int(self.ui.eventnumberentry.text())
         eventbuffer=np.int(self.ui.eventbufferentry.text())
 
 
-        if eventnumber>=numberofevents-1:  
+        if eventnumber>=self.numberofevents-1:  
             eventnumber=0
         else:
             eventnumber=np.int(self.ui.eventnumberentry.text())+1  
@@ -327,14 +332,13 @@ class GUIForm(QtGui.QMainWindow):
         
         #cant plot only one item? so I doubled it
         
-        i=0
-        self.p2.setBrush('b') 
-        while i< numberofevents:
-            self.p2.data[i][5]='b'
-            i=i+1
-        self.p2.data[eventnumber][5]='r'
-        self.ui.scatterplot.update()
-
+        colors=[]
+        colors[0:self.totalplotpoints-self.numberofevents]=[.5]*self.totalplotpoints
+        colors[self.totalplotpoints-self.numberofevents:self.totalplotpoints]=['b']*self.numberofevents
+        colors[self.totalplotpoints-self.numberofevents+eventnumber]='r'
+        self.p2.setBrush(colors, mask=None)
+        
+        
         self.p3.plot([self.t[startpoints[eventnumber]], self.t[startpoints[eventnumber]]],[self.data[startpoints[eventnumber]], self.data[startpoints[eventnumber]]],pen=None, symbol='o',symbolBrush='g',symbolSize=5)
         self.p3.plot([self.t[endpoints[eventnumber]], self.t[endpoints[eventnumber]]],[self.data[endpoints[eventnumber]], self.data[endpoints[eventnumber]]],pen=None, symbol='o',symbolBrush='r',symbolSize=5)
 
@@ -344,25 +348,27 @@ class GUIForm(QtGui.QMainWindow):
     def previousevent(self):      
         self.p3.showAxis('bottom')
         self.p3.showAxis('left')
-        numberofevents=len(self.dt)
+        self.numberofevents=len(self.dt)
+        self.totalplotpoints=len(self.p2.data)
         self.p3.clear()
         eventbuffer=np.int(self.ui.eventbufferentry.text())
         
         
         eventnumber=np.int(self.ui.eventnumberentry.text())-1
         if eventnumber<0:
-            eventnumber=numberofevents-1
+            eventnumber=self.numberofevents-1
         self.p3.plot(self.t[startpoints[eventnumber]-eventbuffer:endpoints[eventnumber]+eventbuffer],self.data[startpoints[eventnumber]-eventbuffer:endpoints[eventnumber]+eventbuffer],pen='b')
         self.p3.addLine(y=self.baseline-self.deli[eventnumber],pen=(173,27,183))
         self.ui.eventnumberentry.setText(str(eventnumber)  )
 
-        i=0
-        self.p2.setBrush('b') 
-        while i< numberofevents:
-            self.p2.data[i][5]='b'
-            i=i+1
-        self.p2.data[eventnumber][5]='r'
-        self.ui.scatterplot.update()
+
+        colors=[]
+        colors[0:self.totalplotpoints-self.numberofevents]=[.5]*self.totalplotpoints
+        colors[self.totalplotpoints-self.numberofevents:self.totalplotpoints]=['b']*self.numberofevents
+        colors[self.totalplotpoints-self.numberofevents+eventnumber]='r'
+        self.p2.setBrush(colors, mask=None)
+
+
 
         self.p3.plot([self.t[startpoints[eventnumber]], self.t[startpoints[eventnumber]]],[self.data[startpoints[eventnumber]], self.data[startpoints[eventnumber]]],pen=None, symbol='o',symbolBrush='g',symbolSize=5)
         self.p3.plot([self.t[endpoints[eventnumber]], self.t[endpoints[eventnumber]]],[self.data[endpoints[eventnumber]], self.data[endpoints[eventnumber]]],pen=None, symbol='o',symbolBrush='r',symbolSize=5)
@@ -453,9 +459,14 @@ class GUIForm(QtGui.QMainWindow):
 
         self.p2.addPoints(np.log10(self.dwell),self.deli, symbol='o',brush='b')
         self.p2.addPoints(x=[np.log10(self.dwell[eventnumber]),np.log10(self.dwell[eventnumber])],y=[self.deli[eventnumber],self.deli[eventnumber]], symbol='o',brush='r')
-        self.ui.scatterplot.update()
-
-        self.ui.scatterplot.update()
+        self.totalplotpoints=len(self.p2.data)        
+        
+        colors=[]
+        colors[0:self.totalplotpoints-self.numberofevents]=[.5]*self.totalplotpoints
+        colors[self.totalplotpoints-self.numberofevents:self.totalplotpoints]=['b']*self.numberofevents
+        colors[self.totalplotpoints-self.numberofevents+eventnumber]='r'
+        self.p2.setBrush(colors, mask=None)
+        
         self.p3.plot([self.t[startpoints[eventnumber]]*1e6, self.t[startpoints[eventnumber]]*1e6],[self.data[startpoints[eventnumber]], self.data[startpoints[eventnumber]]],pen=None, symbol='o',symbolBrush='g',symbolSize=5)
         self.p3.plot([self.t[endpoints[eventnumber]]*1e6, self.t[endpoints[eventnumber]]*1e6],[self.data[endpoints[eventnumber]], self.data[endpoints[eventnumber]]],pen=None, symbol='o',symbolBrush='r',symbolSize=5)
         self.lastevent=eventnumber        
@@ -474,19 +485,31 @@ class GUIForm(QtGui.QMainWindow):
         
         
     def clicked(self, plot, points):
-        eventnumber=np.int(self.ui.eventnumberentry.text())
-        self.p2.data[eventnumber][5]=('b')           
+        self.totalplotpoints=len(self.p2.data)
+        self.numberofevents=len(self.dt)
+        colors=[]
+        colors[0:self.totalplotpoints-self.numberofevents]=[.5]*self.totalplotpoints
+        colors[self.totalplotpoints-self.numberofevents:self.totalplotpoints]=['b']*self.numberofevents
+        self.p2.setBrush(colors, mask=None)
+        
+        
         for p in points:
             p.setBrush('r')
-        self.lastClicked = points
+            
+
         i=0
-        while i < len(self.dt) :
-            if self.p2.data[i][5]=='b' or self.p2.data[i][5]==None:
+        while i < self.totalplotpoints :
+            if self.p2.data[i][5]=='b' or self.p2.data[i][5]==None or self.p2.data[i][5]==.5:
                 i=i+1
             else:
+                if i<self.totalplotpoints-self.numberofevents:
+                    print 'Event is from an earlier file, not clickable'
+                    break
+                
+                i=i+self.numberofevents-self.totalplotpoints
                 self.ui.eventnumberentry.setText(str(i))
                 self.inspectevent()                
-                i=len(self.dt)
+                i=self.totalplotpoints
                 
         
             
