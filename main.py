@@ -13,7 +13,7 @@ class GUIForm(QtGui.QMainWindow):
  
     def __init__(self, master=None):
         QtGui.QMainWindow.__init__(self,master)
-        self.ui = Ui_NanoPython()
+        self.ui = Ui_PythIon()
         self.ui.setupUi(self)
         
         QtCore.QObject.connect(self.ui.loadbutton, QtCore.SIGNAL('clicked()'), self.getfile)
@@ -53,7 +53,8 @@ class GUIForm(QtGui.QMainWindow):
         self.w1.setLogMode(x=True,y=False)
         
         self.p3=self.ui.eventplot.addPlot()
-        self.p3.setLabel('bottom', text='Time', units=u'μs')
+#        self.p3.setLabel('bottom', text='Time', units=u'μs')
+        self.p3.setLabel('bottom', text='Time', units='s')
         self.p3.setLabel('left', text='Current', units='nA')
         self.p3.hideAxis('bottom')
         self.p3.hideAxis('left')
@@ -82,6 +83,11 @@ class GUIForm(QtGui.QMainWindow):
         self.p3.hideAxis('bottom')
         self.p3.hideAxis('left')
         self.p3.addItem(self.logo)
+        self.ui.eventinfolabel.clear()
+        self.ui.eventcounterlabel.clear()
+        self.ui.meandelilabel.clear()
+        self.ui.meandwelllabel.clear()
+        self.ui.meandtlabel.clear()
         self.totalplotpoints=len(self.p2.data)
 
         colors=[]
@@ -133,6 +139,7 @@ class GUIForm(QtGui.QMainWindow):
         if self.hasbaselinebeenset==0:
             self.baseline=np.median(self.data)  
             self.var=np.std(self.data)
+        self.ui.eventcounterlabel.setText('Baseline='+str(round(self.baseline,2))+' nA')
 
         #skips plotting first and last two points, there was a weird spike issue
         self.p1.plot(self.t[::10][2:][:-2],self.data[::10][2:][:-2],pen='b')
@@ -257,7 +264,7 @@ class GUIForm(QtGui.QMainWindow):
         
         self.deli=self.deli[self.deli!=-1]
         self.dwell=self.dwell[self.dwell!=-1]
-        self.dt=np.diff(startpoints)
+        self.dt=np.diff(startpoints)/self.outputsamplerate
         self.deli=self.deli[self.deli!=0]
         self.dwell=self.dwell[self.dwell!=0]
         self.dt=self.dt[self.dt!=0]
@@ -274,6 +281,9 @@ class GUIForm(QtGui.QMainWindow):
         self.p1.plot(self.t[endpoints], self.data[endpoints], pen=None, symbol='o',symbolBrush='r',symbolSize=5)
         
         self.ui.eventcounterlabel.setText('Events:'+str(numberofevents))
+        self.ui.meandelilabel.setText('Deli:'+str(round(mean(self.deli),2))+' nA')
+        self.ui.meandwelllabel.setText('Dwell:'+str(round(np.e**mean(log(self.dwell)),2))+ u' μs')
+        self.ui.meandtlabel.setText('Rate:'+str(round(numberofevents/self.t[-1],1))+' events/s')
 
         self.p2.addPoints(x=np.log10(self.dwell),y=self.deli, symbol='o',brush='b')
         self.w1.addItem(self.p2)
@@ -308,7 +318,7 @@ class GUIForm(QtGui.QMainWindow):
         self.p3.plot([self.t[startpoints[eventnumber]], self.t[startpoints[eventnumber]]],[self.data[startpoints[eventnumber]], self.data[startpoints[eventnumber]]],pen=None, symbol='o',symbolBrush='g',symbolSize=5)
         self.p3.plot([self.t[endpoints[eventnumber]], self.t[endpoints[eventnumber]]],[self.data[endpoints[eventnumber]], self.data[endpoints[eventnumber]]],pen=None, symbol='o',symbolBrush='r',symbolSize=5)
 
-        self.ui.eventinfolabel.setText('Dwell Time=' + str(round(self.dwell[eventnumber],2))+ u' μs,   Deli='+str(round(self.deli[eventnumber],2)) +' nA')
+        self.ui.eventinfolabel.setText('Dwell Time=' + str(round(self.dwell[eventnumber],2))+ u'μs,   Deli='+str(round(self.deli[eventnumber],2)) +' nA')
         self.lastevent=eventnumber
         
     def nextevent(self):
@@ -397,6 +407,8 @@ class GUIForm(QtGui.QMainWindow):
             if self.hasbaselinebeenset==0:
                 self.baseline=np.median(self.data)  
                 self.var=np.std(self.data)
+                self.ui.eventcounterlabel.setText('Baseline='+str(round(self.baseline,2))+' nA')
+
             
             self.p1.plot(self.t[::10][2:][:-2],self.data[::10][2:][:-2],pen='b')
             self.p1.addLine(y=self.baseline,pen='g')
@@ -425,6 +437,8 @@ class GUIForm(QtGui.QMainWindow):
             self.p1.addLine(y=self.threshold,pen='r')
             self.lr=[]
             self.hasbaselinebeenset=1
+            self.ui.eventcounterlabel.setText('Baseline='+str(round(self.baseline,2))+' nA')
+
             
             
     def clearscatter(self):
