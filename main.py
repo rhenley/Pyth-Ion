@@ -570,8 +570,19 @@ class GUIForm(QtGui.QMainWindow):
                 break
         self.datafilename=(filebase+nextindex+'.log')
         self.Load()
-            
         
+    def keyPressEvent(self, event):
+        key = event.key()
+        if key == QtCore.Qt.Key_Up:
+            self.nextfile()
+        if key == QtCore.Qt.Key_Down:
+            self.previousfile()
+        if key == QtCore.Qt.Key_Right:
+            self.nextevent()
+        if key == QtCore.Qt.Key_Left:
+            self.previousevent()            
+        if key == QtCore.Qt.Key_Return:
+            self.Load()        
 
  
 if __name__ == "__main__":
