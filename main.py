@@ -304,7 +304,7 @@ class GUIForm(QtGui.QMainWindow):
         
         eventbuffer=np.int(self.ui.eventbufferentry.text())
         eventnumber=np.int(self.ui.eventnumberentry.text())
-        if eventnumber>self.numberofevents:
+        if eventnumber>=self.numberofevents:
             eventnumber=self.numberofevents-1
             self.ui.eventnumberentry.setText(str(eventnumber))
         self.p3.plot(self.t[startpoints[eventnumber]-eventbuffer:endpoints[eventnumber]+eventbuffer],self.data[startpoints[eventnumber]-eventbuffer:endpoints[eventnumber]+eventbuffer],pen='b')
@@ -319,7 +319,7 @@ class GUIForm(QtGui.QMainWindow):
         self.p3.plot([self.t[startpoints[eventnumber]], self.t[startpoints[eventnumber]]],[self.data[startpoints[eventnumber]], self.data[startpoints[eventnumber]]],pen=None, symbol='o',symbolBrush='g',symbolSize=5)
         self.p3.plot([self.t[endpoints[eventnumber]], self.t[endpoints[eventnumber]]],[self.data[endpoints[eventnumber]], self.data[endpoints[eventnumber]]],pen=None, symbol='o',symbolBrush='r',symbolSize=5)
 
-        self.ui.eventinfolabel.setText('Dwell Time=' + str(round(self.dwell[eventnumber],2))+ u'μs,   Deli='+str(round(self.deli[eventnumber],2)) +' nA')
+        self.ui.eventinfolabel.setText('Dwell Time=' + str(round(self.dwell[eventnumber],2))+ u' μs,   Deli='+str(round(self.deli[eventnumber],2)) +' nA')
         self.lastevent=eventnumber
         
     def nextevent(self):
@@ -450,41 +450,45 @@ class GUIForm(QtGui.QMainWindow):
     def deleteevent(self):
         global startpoints,endpoints
         eventnumber=np.int(self.ui.eventnumberentry.text())
+        if eventnumber>self.numberofevents:
+            eventnumber=self.numberofevents-1
+            self.ui.eventnumberentry.setText(str(eventnumber))
         self.deli=np.delete(self.deli,eventnumber)
         self.dwell=np.delete(self.dwell,eventnumber)
         self.dt=np.delete(self.dt,eventnumber)
         self.frac=np.delete(self.frac,eventnumber)
         startpoints=np.delete(startpoints,eventnumber)
         endpoints=np.delete(endpoints,eventnumber)
+        self.p2.data=np.delete(self.p2.data,self.totalplotpoints-self.numberofevents+eventnumber)
+        
+      
         numberofevents=len(self.dt)
         self.ui.eventcounterlabel.setText('Events:'+str(numberofevents))
  
+        self.inspectevent()
 
-        self.p3.clear()
-        self.p3.showAxis('bottom')
-        self.p3.showAxis('left')        
-        
-        self.p2.setData(x=[],y=[])
-        
-        self.p3.plot(self.t[startpoints[eventnumber]-1000:endpoints[eventnumber]+1000]*1e6,self.data[startpoints[eventnumber]-1000:endpoints[eventnumber]+1000],pen='b')
-        self.p3.addLine(y=self.baseline-self.deli[eventnumber],pen=(173,27,183))
-
-#        self.p2.addPoints(x=np.log10(self.dwell),y=self.deli, symbol='o',brush='b')
+#        self.p3.clear()
+#        self.p3.showAxis('bottom')
+#        self.p3.showAxis('left')        
+#        
+#        self.p2.setData(x=[],y=[])
+#        
+#        self.p3.plot(self.t[startpoints[eventnumber]-1000:endpoints[eventnumber]+1000]*1e6,self.data[startpoints[eventnumber]-1000:endpoints[eventnumber]+1000],pen='b')
+#        self.p3.addLine(y=self.baseline-self.deli[eventnumber],pen=(173,27,183))
+#
+#        self.p2.addPoints(np.log10(self.dwell),self.deli, symbol='o',brush='b')
 #        self.p2.addPoints(x=[np.log10(self.dwell[eventnumber]),np.log10(self.dwell[eventnumber])],y=[self.deli[eventnumber],self.deli[eventnumber]], symbol='o',brush='r')
+#        self.totalplotpoints=len(self.p2.data)        
+#        
+#        colors=[]
+#        colors[0:self.totalplotpoints-self.numberofevents]=[.5]*self.totalplotpoints
+#        colors[self.totalplotpoints-self.numberofevents:self.totalplotpoints]=['b']*self.numberofevents
+#        colors[self.totalplotpoints-self.numberofevents+eventnumber]='r'
+#        self.p2.setBrush(colors, mask=None)
+#        
+#        self.p3.plot([self.t[startpoints[eventnumber]]*1e6, self.t[startpoints[eventnumber]]*1e6],[self.data[startpoints[eventnumber]], self.data[startpoints[eventnumber]]],pen=None, symbol='o',symbolBrush='g',symbolSize=5)
+#        self.p3.plot([self.t[endpoints[eventnumber]]*1e6, self.t[endpoints[eventnumber]]*1e6],[self.data[endpoints[eventnumber]], self.data[endpoints[eventnumber]]],pen=None, symbol='o',symbolBrush='r',symbolSize=5)
 
-        self.p2.addPoints(np.log10(self.dwell),self.deli, symbol='o',brush='b')
-        self.p2.addPoints(x=[np.log10(self.dwell[eventnumber]),np.log10(self.dwell[eventnumber])],y=[self.deli[eventnumber],self.deli[eventnumber]], symbol='o',brush='r')
-        self.totalplotpoints=len(self.p2.data)        
-        
-        colors=[]
-        colors[0:self.totalplotpoints-self.numberofevents]=[.5]*self.totalplotpoints
-        colors[self.totalplotpoints-self.numberofevents:self.totalplotpoints]=['b']*self.numberofevents
-        colors[self.totalplotpoints-self.numberofevents+eventnumber]='r'
-        self.p2.setBrush(colors, mask=None)
-        
-        self.p3.plot([self.t[startpoints[eventnumber]]*1e6, self.t[startpoints[eventnumber]]*1e6],[self.data[startpoints[eventnumber]], self.data[startpoints[eventnumber]]],pen=None, symbol='o',symbolBrush='g',symbolSize=5)
-        self.p3.plot([self.t[endpoints[eventnumber]]*1e6, self.t[endpoints[eventnumber]]*1e6],[self.data[endpoints[eventnumber]], self.data[endpoints[eventnumber]]],pen=None, symbol='o',symbolBrush='r',symbolSize=5)
-        self.lastevent=eventnumber        
         
     def invertdata(self):
         self.p1.clear()
