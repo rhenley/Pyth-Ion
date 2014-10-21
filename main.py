@@ -281,8 +281,9 @@ class GUIForm(QtGui.QMainWindow):
         self.p1.plot(self.t[endpoints], self.data[endpoints], pen=None, symbol='o',symbolBrush='r',symbolSize=5)
         
         self.ui.eventcounterlabel.setText('Events:'+str(numberofevents))
-        self.ui.meandelilabel.setText('Deli:'+str(round(mean(self.deli),2))+' nA')
-        self.ui.meandwelllabel.setText('Dwell:'+str(round(np.e**mean(log(self.dwell)),2))+ u' μs')
+        self.ui.meandelilabel.setText('Deli:'+str(round(np.mean(self.deli),2))+' nA')
+#        self.ui.meandwelllabel.setText('Dwell:'+str(round(np.e**mean(log(self.dwell)),2))+ u' μs')
+        self.ui.meandwelllabel.setText('Dwell:'+str(round(np.median(self.dwell),2))+ u' μs')
         self.ui.meandtlabel.setText('Rate:'+str(round(numberofevents/self.t[-1],1))+' events/s')
 
         self.p2.addPoints(x=np.log10(self.dwell),y=self.deli, symbol='o',brush='b')
