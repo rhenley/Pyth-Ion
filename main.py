@@ -145,6 +145,7 @@ class GUIForm(QtGui.QMainWindow):
         self.p1.plot(self.t[::10][2:][:-2],self.data[::10][2:][:-2],pen='b')
         self.p1.addLine(y=self.baseline,pen='g')
         self.p1.addLine(y=self.threshold,pen='r')
+        self.p1.autoRange()
         
         del b,a,Wn,closedloop_gain,ADCvref,currentoffset,preADCgain,TIAgain,
         samplerate,self.LPfiltercutoff
@@ -289,6 +290,8 @@ class GUIForm(QtGui.QMainWindow):
         self.p2.addPoints(x=np.log10(self.dwell),y=self.deli, symbol='o',brush='b')
         self.w1.addItem(self.p2)
         self.w1.setLogMode(x=True,y=False)
+        self.p1.autoRange()
+        self.p2.autoRange()
         self.ui.scatterplot.update()
         
 
@@ -321,6 +324,7 @@ class GUIForm(QtGui.QMainWindow):
 
         self.ui.eventinfolabel.setText('Dwell Time=' + str(round(self.dwell[eventnumber],2))+ u' μs,   Deli='+str(round(self.deli[eventnumber],2)) +' nA')
         self.lastevent=eventnumber
+        self.p3.autoRange()
         
     def nextevent(self):
         self.p3.showAxis('bottom')
@@ -355,6 +359,7 @@ class GUIForm(QtGui.QMainWindow):
 
         self.ui.eventinfolabel.setText('Dwell Time=' + str(round(self.dwell[eventnumber],2))+ u' μs,   Deli='+str(round(self.deli[eventnumber],2)) +' nA')
         self.lastevent=eventnumber
+        self.p3.autoRange()
         
     def previousevent(self):      
         self.p3.showAxis('bottom')
@@ -386,6 +391,7 @@ class GUIForm(QtGui.QMainWindow):
 
         self.ui.eventinfolabel.setText('Dwell Time=' + str(round(self.dwell[eventnumber],2))+ u' μs,   Deli='+str(round(self.deli[eventnumber],2)) +' nA')
         self.lastevent=eventnumber
+        self.p3.autoRange()
         
     def cut(self):              
         if self.lr==[]:
@@ -415,6 +421,7 @@ class GUIForm(QtGui.QMainWindow):
             self.p1.addLine(y=self.baseline,pen='g')
             self.p1.addLine(y=self.threshold,pen='r')
             self.lr=[]
+            self.p1.autoRange()
         
             
     def baselinecalc(self):
@@ -439,7 +446,7 @@ class GUIForm(QtGui.QMainWindow):
             self.lr=[]
             self.hasbaselinebeenset=1
             self.ui.eventcounterlabel.setText('Baseline='+str(round(self.baseline,2))+' nA')
-
+            self.p1.autoRange()
             
             
     def clearscatter(self):
@@ -501,7 +508,7 @@ class GUIForm(QtGui.QMainWindow):
         self.p1.plot(self.t[::10],self.data[::10],pen='b')
         self.p1.addLine(y=self.baseline,pen='g')
         self.p1.addLine(y=self.threshold,pen='r')
-        
+        self.p1.autoRange()        
         
     def clicked(self, plot, points):
         self.totalplotpoints=len(self.p2.data)
