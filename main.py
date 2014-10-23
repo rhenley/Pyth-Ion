@@ -92,45 +92,49 @@ class GUIForm(QtGui.QMainWindow):
         colors=[]
         colors[0:self.totalplotpoints]=[.5]*self.totalplotpoints
         self.p2.setBrush(colors, mask=None)                  
-        
-        self.data=np.fromfile(self.datafilename,self.CHIMERAfile) 
-        
-        self.LPfiltercutoff = np.float64(self.ui.LPentry.text())*1000
-        self.outputsamplerate = np.float64(self.ui.outputsamplerateentry.text())*1000 #use integer multiples of 4166.67 ie 2083.33 or 1041.67
-        self.threshold=np.float64(self.ui.thresholdentry.text())
-        
-        self.ui.filelabel.setText(self.datafilename)        
-        self.matfilename=str(os.path.splitext(self.datafilename)[0])       
-        self.mat = scipy.io.loadmat(self.matfilename)
 
-        print self.datafilename   
-        
-        samplerate = np.float64(self.mat['ADCSAMPLERATE'])
-        TIAgain = np.int32(self.mat['SETUP_TIAgain'])
-        preADCgain = np.float64(self.mat['SETUP_preADCgain'])
-        currentoffset = np.float64(self.mat['SETUP_pAoffset'])
-        ADCvref = np.float64(self.mat['SETUP_ADCVREF'])
-        ADCbits = np.int32(self.mat['SETUP_ADCBITS'])
-        closedloop_gain = TIAgain*preADCgain;
-        
-        if samplerate < 4000e3:
-            self.data=self.data[::round(samplerate/self.outputsamplerate)]
-        
-        
-        bitmask = (2**16 - 1) - (2**(16-ADCbits) - 1)
-        self.data = -ADCvref + (2*ADCvref) * (self.data & bitmask) / 2**16
-        self.data = 10**9*(self.data/closedloop_gain + currentoffset)
-        
-        if os.name=='posix':
-            self.data=self.data[0]
-       
-        ###############################################data has now been loaded
-        ###############################################now filtering data
-        
-        Wn = round(self.LPfiltercutoff/(samplerate/2),4)
-        b,a = signal.bessel(4, Wn, btype='low');
-        
-        self.data = signal.filtfilt(b,a,self.data)
+        if str(os.path.splitext(self.datafilename)[1])=='.log':         
+            self.data=np.fromfile(self.datafilename,self.CHIMERAfile) 
+            
+            self.LPfiltercutoff = np.float64(self.ui.LPentry.text())*1000
+            self.outputsamplerate = np.float64(self.ui.outputsamplerateentry.text())*1000 #use integer multiples of 4166.67 ie 2083.33 or 1041.67
+            self.threshold=np.float64(self.ui.thresholdentry.text())
+            
+            self.ui.filelabel.setText(self.datafilename)        
+            self.matfilename=str(os.path.splitext(self.datafilename)[0])       
+            self.mat = scipy.io.loadmat(self.matfilename)
+    
+            print self.datafilename   
+            
+            samplerate = np.float64(self.mat['ADCSAMPLERATE'])
+            TIAgain = np.int32(self.mat['SETUP_TIAgain'])
+            preADCgain = np.float64(self.mat['SETUP_preADCgain'])
+            currentoffset = np.float64(self.mat['SETUP_pAoffset'])
+            ADCvref = np.float64(self.mat['SETUP_ADCVREF'])
+            ADCbits = np.int32(self.mat['SETUP_ADCBITS'])
+            closedloop_gain = TIAgain*preADCgain;
+            
+            if samplerate < 4000e3:
+                self.data=self.data[::round(samplerate/self.outputsamplerate)]
+            
+            
+            bitmask = (2**16 - 1) - (2**(16-ADCbits) - 1)
+            self.data = -ADCvref + (2*ADCvref) * (self.data & bitmask) / 2**16
+            self.data = 10**9*(self.data/closedloop_gain + currentoffset)
+            
+            if os.name=='posix':
+                self.data=self.data[0]
+           
+            ###############################################data has now been loaded
+            ###############################################now filtering data
+            
+            Wn = round(self.LPfiltercutoff/(samplerate/2),4)
+            b,a = signal.bessel(4, Wn, btype='low');
+            
+            self.data = signal.filtfilt(b,a,self.data)
+
+        else:  
+            print self.datafilename
         
         self.t=np.arange(0,len(self.data))
         self.t=self.t/self.outputsamplerate
@@ -155,15 +159,14 @@ class GUIForm(QtGui.QMainWindow):
                
         
         if self.direc==[]:
-            self.datafilename = str(QtGui.QFileDialog.getOpenFileName(self, 'Open file','*.log')  )
+            self.datafilename = str(QtGui.QFileDialog.getOpenFileName(self, 'Open file',os.getcwd(),("*.log;;*.opt"))  )
             self.direc=os.path.dirname(self.datafilename)            
         else:
-            self.datafilename = str(QtGui.QFileDialog.getOpenFileName(self,'Open file',self.direc,'*.log')) 
+            self.datafilename = str(QtGui.QFileDialog.getOpenFileName(self,'Open file',self.direc,("*.log;;*.opt"))) 
             self.direc=os.path.dirname(self.datafilename)   
 #        filelistsize=np.size()
         
-        
-        self.Load()
+        self.Load() 
         
     def analyze(self):
         global startpoints,endpoints
@@ -290,7 +293,7 @@ class GUIForm(QtGui.QMainWindow):
         self.w1.addItem(self.p2)
         self.w1.setLogMode(x=True,y=False)
         self.p1.autoRange()
-        self.p2.autoRange()
+        self.w1.autoRange()
         self.ui.scatterplot.update()
         
 
