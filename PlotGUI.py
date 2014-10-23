@@ -27,7 +27,7 @@ except AttributeError:
 class Ui_PythIon(object):
     def setupUi(self, PythIon):
         if os.name=='posix':
-            fontsize=10
+            fontsize=12
         else:
             fontsize=8
         PythIon.setObjectName(_fromUtf8("PythIon"))
