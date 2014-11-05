@@ -12,10 +12,7 @@ The package currently works exclusively with data files obtained using Chimera m
 
 The following packages are prerequisites for Pyth-Ion
 
-scipy
-
-numpy
-
-pyqtgraph
-
-PyQt4
+1. scipy
+2. numpy
+3. pyqtgraph
+4. PyQt4
