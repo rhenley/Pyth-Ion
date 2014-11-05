@@ -11,7 +11,11 @@ IMPORTANT: It is of critical importance that Pyth-Ion be run using a 64-bit vers
 ###Dependencies
 
 The following packages are prerequisites for Pyth-Ion
+
 scipy
+
 numpy
+
 pyqtgraph
+
 PyQt4
