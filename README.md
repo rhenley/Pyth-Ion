@@ -6,7 +6,7 @@ The package currently works exclusively with data files obtained using Chimera m
 
 ##Installing
 
-IMPORTANT: It is of critical importance that Pyth-Ion be run using a 64-bit version of Python 2.7! Especially for use with Chimera files
+_IMPORTANT_: It is of critical importance that Pyth-Ion be run using a 64-bit version of Python 2.7! Especially for use with Chimera files
 
 ###Dependencies
 
