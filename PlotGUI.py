@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'plotgui.ui'
 #
-# Created: Wed Nov 05 09:55:50 2014
+# Created: Mon Jan 05 17:35:41 2015
 #      by: PyQt4 UI code generator 4.9.6
 #
 # WARNING! All changes made in this file will be lost!
@@ -458,20 +458,6 @@ class Ui_PythIon(object):
         self.previousfilebutton.setFont(font)
         self.previousfilebutton.setObjectName(_fromUtf8("previousfilebutton"))
         self.verticalLayout_8.addWidget(self.previousfilebutton)
-        self.multifilebutton = QtGui.QPushButton(self.layoutWidget1)
-        sizePolicy = QtGui.QSizePolicy(QtGui.QSizePolicy.Ignored, QtGui.QSizePolicy.Ignored)
-        sizePolicy.setHorizontalStretch(0)
-        sizePolicy.setVerticalStretch(0)
-        sizePolicy.setHeightForWidth(self.multifilebutton.sizePolicy().hasHeightForWidth())
-        self.multifilebutton.setSizePolicy(sizePolicy)
-        font = QtGui.QFont()
-        font.setFamily(_fromUtf8("Arial"))
-        font.setPointSize(8)
-        font.setBold(False)
-        font.setWeight(50)
-        self.multifilebutton.setFont(font)
-        self.multifilebutton.setObjectName(_fromUtf8("multifilebutton"))
-        self.verticalLayout_8.addWidget(self.multifilebutton)
         self.layoutWidget2 = QtGui.QWidget(self.groupBox)
         self.layoutWidget2.setGeometry(QtCore.QRect(110, 10, 101, 112))
         font = QtGui.QFont()
@@ -526,20 +512,6 @@ class Ui_PythIon(object):
         self.analyzebutton.setFont(font)
         self.analyzebutton.setObjectName(_fromUtf8("analyzebutton"))
         self.verticalLayout_3.addWidget(self.analyzebutton)
-        self.savebutton = QtGui.QPushButton(self.layoutWidget2)
-        sizePolicy = QtGui.QSizePolicy(QtGui.QSizePolicy.Ignored, QtGui.QSizePolicy.Ignored)
-        sizePolicy.setHorizontalStretch(0)
-        sizePolicy.setVerticalStretch(0)
-        sizePolicy.setHeightForWidth(self.savebutton.sizePolicy().hasHeightForWidth())
-        self.savebutton.setSizePolicy(sizePolicy)
-        font = QtGui.QFont()
-        font.setFamily(_fromUtf8("Arial"))
-        font.setPointSize(8)
-        font.setBold(False)
-        font.setWeight(50)
-        self.savebutton.setFont(font)
-        self.savebutton.setObjectName(_fromUtf8("savebutton"))
-        self.verticalLayout_3.addWidget(self.savebutton)
         self.eventinfolabel = QtGui.QLabel(self.centralwidget)
         self.eventinfolabel.setGeometry(QtCore.QRect(4, 700, 551, 16))
         font = QtGui.QFont()
@@ -694,11 +666,9 @@ class Ui_PythIon(object):
         self.loadbutton.setText(_translate("PythIon", "LOAD", None))
         self.nextfilebutton.setText(_translate("PythIon", "NEXT", None))
         self.previousfilebutton.setText(_translate("PythIon", "PREVIOUS", None))
-        self.multifilebutton.setText(_translate("PythIon", "MULTIFILE", None))
         self.cutbutton.setText(_translate("PythIon", "CUT", None))
         self.baselinebutton.setText(_translate("PythIon", "BASELINE", None))
         self.analyzebutton.setText(_translate("PythIon", "ANALYZE", None))
-        self.savebutton.setText(_translate("PythIon", "SAVE", None))
         self.invertbutton.setText(_translate("PythIon", "INVERT", None))
         self.concatenatebutton.setText(_translate("PythIon", "CONCATENATE", None))
         self.deleteeventbutton.setText(_translate("PythIon", "DELETE EVENT", None))

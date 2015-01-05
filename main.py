@@ -18,7 +18,7 @@ class GUIForm(QtGui.QMainWindow):
         
         QtCore.QObject.connect(self.ui.loadbutton, QtCore.SIGNAL('clicked()'), self.getfile)
         QtCore.QObject.connect(self.ui.analyzebutton, QtCore.SIGNAL('clicked()'), self.analyze)
-        QtCore.QObject.connect(self.ui.savebutton, QtCore.SIGNAL('clicked()'), self.save)
+#        QtCore.QObject.connect(self.ui.savebutton, QtCore.SIGNAL('clicked()'), self.save)
         QtCore.QObject.connect(self.ui.cutbutton, QtCore.SIGNAL('clicked()'), self.cut)
         QtCore.QObject.connect(self.ui.baselinebutton, QtCore.SIGNAL('clicked()'), self.baselinecalc)
         QtCore.QObject.connect(self.ui.clearscatterbutton, QtCore.SIGNAL('clicked()'), self.clearscatter)
@@ -42,7 +42,7 @@ class GUIForm(QtGui.QMainWindow):
         
         self.p1 = self.ui.signalplot.addPlot()
         self.p1.setLabel('bottom', text='Time', units='s')
-        self.p1.setLabel('left', text='Current', units='A')
+        self.p1.setLabel('left', text='Current', units='nA')
         
 #        self.p2 = self.ui.scatterplot.addPlot()
 
@@ -57,7 +57,7 @@ class GUIForm(QtGui.QMainWindow):
         self.p3=self.ui.eventplot.addPlot()
 #        self.p3.setLabel('bottom', text='Time', units=u'μs')
         self.p3.setLabel('bottom', text='Time', units='s')
-        self.p3.setLabel('left', text='Current', units='A')
+        self.p3.setLabel('left', text='Current', units='nA')
         self.p3.hideAxis('bottom')
         self.p3.hideAxis('left')
         
@@ -97,14 +97,14 @@ class GUIForm(QtGui.QMainWindow):
         colors[0:self.totalplotpoints]=[.5]*self.totalplotpoints
         self.p2.setBrush(colors, mask=None) 
 
-        self.threshold=np.float64(self.ui.thresholdentry.text()) *10**(-9)  
+        self.threshold=np.float64(self.ui.thresholdentry.text()) 
         self.ui.filelabel.setText(self.datafilename)
-        print self.datafilename                  
+        print self.datafilename  
+        self.LPfiltercutoff = np.float64(self.ui.LPentry.text())*1000                
 
         if str(os.path.splitext(self.datafilename)[1])=='.log':         
             self.data=np.fromfile(self.datafilename,self.CHIMERAfile) 
             
-            self.LPfiltercutoff = np.float64(self.ui.LPentry.text())*1000
             self.outputsamplerate = np.float64(self.ui.outputsamplerateentry.text())*1000 #use integer multiples of 4166.67 ie 2083.33 or 1041.67
                   
             self.matfilename=str(os.path.splitext(self.datafilename)[0])       
@@ -137,23 +137,29 @@ class GUIForm(QtGui.QMainWindow):
             b,a = signal.bessel(4, Wn, btype='low');
             
             self.data = signal.filtfilt(b,a,self.data)
-            self.data=self.data*10**-9
 
         if str(os.path.splitext(self.datafilename)[1])=='.opt': 
             self.data=np.fromfile(self.datafilename, dtype = np.dtype('>d'))            
-            self.outputsamplerate  =250e3    
+#            self.outputsamplerate  =250e3    
+            self.outputsamplerate  =250e3             
             self.data=self.data*10**9
+            
+                        
+            Wn = round(self.LPfiltercutoff/(100*10**3/2),4)
+            b,a = signal.bessel(4, Wn, btype='low');
+            
+            self.data = signal.filtfilt(b,a,self.data)
 
-#        else:  
-#            print "error: unknown data type"
+        else:  
+            print "error: unknown data type"
         
         self.t=np.arange(0,len(self.data))
         self.t=self.t/self.outputsamplerate
         
         if self.hasbaselinebeenset==0:
-            self.baseline=np.median(self.data) 
+            self.baseline=np.median(self.data)  
             self.var=np.std(self.data)
-        self.ui.eventcounterlabel.setText('Baseline='+str(round(self.baseline*10**(9),2))+' nA')
+        self.ui.eventcounterlabel.setText('Baseline='+str(round(self.baseline,2))+' nA')
 
         #skips plotting first and last two points, there was a weird spike issue
         self.p1.plot(self.t[::10][2:][:-2],self.data[::10][2:][:-2],pen='b')
@@ -182,7 +188,7 @@ class GUIForm(QtGui.QMainWindow):
     def analyze(self):
         global startpoints,endpoints
 
-        self.threshold=np.float64(self.ui.thresholdentry.text())*10**(-9)   
+        self.threshold=np.float64(self.ui.thresholdentry.text())   
         
         below=np.where(self.data<self.threshold)[0]
         startandend=np.diff(below)
@@ -285,8 +291,6 @@ class GUIForm(QtGui.QMainWindow):
         self.dt=np.append(0,self.dt)
         self.frac=self.deli/self.baseline
         
-        self.deli=self.deli*10**(9)
-        
 #        print self.dwell, self.deli, self.dt
         
         self.p1.clear()       
@@ -312,6 +316,8 @@ class GUIForm(QtGui.QMainWindow):
         self.ui.scatterplot.update()
         self.w1.setRange(yRange=[0,1])
         
+        self.save()
+        
 
     def save(self):  
          np.savetxt(self.matfilename+'DB.txt',np.column_stack((self.deli,self.frac,self.dwell,self.dt)),delimiter='\t')
@@ -329,7 +335,7 @@ class GUIForm(QtGui.QMainWindow):
             eventnumber=self.numberofevents-1
             self.ui.eventnumberentry.setText(str(eventnumber))
         self.p3.plot(self.t[startpoints[eventnumber]-eventbuffer:endpoints[eventnumber]+eventbuffer],self.data[startpoints[eventnumber]-eventbuffer:endpoints[eventnumber]+eventbuffer],pen='b')
-        self.p3.addLine(y=self.baseline-10**(-9)*self.deli[eventnumber],pen=(173,27,183))
+        self.p3.addLine(y=self.baseline-self.deli[eventnumber],pen=(173,27,183))
 
         colors=[]
         colors[0:self.totalplotpoints-self.numberofevents]=[.5]*self.totalplotpoints
@@ -360,7 +366,7 @@ class GUIForm(QtGui.QMainWindow):
             eventnumber=np.int(self.ui.eventnumberentry.text())+1  
 
         self.p3.plot(self.t[startpoints[eventnumber]-eventbuffer:endpoints[eventnumber]+eventbuffer],self.data[startpoints[eventnumber]-eventbuffer:endpoints[eventnumber]+eventbuffer],pen='b')
-        self.p3.addLine(y=self.baseline-10**(-9)*self.deli[eventnumber],pen=(173,27,183))
+        self.p3.addLine(y=self.baseline-self.deli[eventnumber],pen=(173,27,183))
         self.ui.eventnumberentry.setText(str(eventnumber))
         
         #cant plot only one item? so I doubled it
@@ -392,7 +398,7 @@ class GUIForm(QtGui.QMainWindow):
         if eventnumber<0:
             eventnumber=self.numberofevents-1
         self.p3.plot(self.t[startpoints[eventnumber]-eventbuffer:endpoints[eventnumber]+eventbuffer],self.data[startpoints[eventnumber]-eventbuffer:endpoints[eventnumber]+eventbuffer],pen='b')
-        self.p3.addLine(y=self.baseline-10**(-9)*self.deli[eventnumber],pen=(173,27,183))
+        self.p3.addLine(y=self.baseline-self.deli[eventnumber],pen=(173,27,183))
         self.ui.eventnumberentry.setText(str(eventnumber)  )
 
 
