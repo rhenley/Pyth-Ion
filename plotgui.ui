@@ -710,10 +710,32 @@
         </property>
        </widget>
       </item>
+      <item>
+       <widget class="QPushButton" name="clearscatterbutton">
+        <property name="sizePolicy">
+         <sizepolicy hsizetype="Ignored" vsizetype="Ignored">
+          <horstretch>0</horstretch>
+          <verstretch>0</verstretch>
+         </sizepolicy>
+        </property>
+        <property name="font">
+         <font>
+          <family>Arial</family>
+          <pointsize>8</pointsize>
+          <weight>50</weight>
+          <bold>false</bold>
+         </font>
+        </property>
+        <property name="text">
+         <string>CLEAR SCATTER</string>
+        </property>
+       </widget>
+      </item>
      </layout>
      <zorder>nextfilebutton</zorder>
      <zorder>previousfilebutton</zorder>
      <zorder>loadbutton</zorder>
+     <zorder>clearscatterbutton</zorder>
     </widget>
     <widget class="QWidget" name="layoutWidget">
      <property name="geometry">
@@ -796,6 +818,27 @@
         </property>
        </widget>
       </item>
+      <item>
+       <widget class="QPushButton" name="invertbutton">
+        <property name="sizePolicy">
+         <sizepolicy hsizetype="Ignored" vsizetype="Ignored">
+          <horstretch>0</horstretch>
+          <verstretch>0</verstretch>
+         </sizepolicy>
+        </property>
+        <property name="font">
+         <font>
+          <family>Arial</family>
+          <pointsize>8</pointsize>
+          <weight>50</weight>
+          <bold>false</bold>
+         </font>
+        </property>
+        <property name="text">
+         <string>INVERT</string>
+        </property>
+       </widget>
+      </item>
      </layout>
     </widget>
    </widget>
@@ -826,9 +869,9 @@
     </property>
     <property name="geometry">
      <rect>
-      <x>980</x>
-      <y>2</y>
-      <width>141</width>
+      <x>990</x>
+      <y>0</y>
+      <width>131</width>
       <height>151</height>
      </rect>
     </property>
@@ -862,14 +905,14 @@
      <string/>
     </property>
     <property name="alignment">
-     <set>Qt::AlignJustify|Qt::AlignVCenter</set>
+     <set>Qt::AlignCenter</set>
     </property>
     <widget class="QWidget" name="verticalLayoutWidget_6">
      <property name="geometry">
       <rect>
        <x>10</x>
        <y>10</y>
-       <width>121</width>
+       <width>111</width>
        <height>131</height>
       </rect>
      </property>
@@ -883,7 +926,7 @@
      </property>
      <layout class="QVBoxLayout" name="verticalLayout_7">
       <item>
-       <widget class="QPushButton" name="invertbutton">
+       <widget class="QPushButton" name="deleteeventbutton">
         <property name="sizePolicy">
          <sizepolicy hsizetype="Ignored" vsizetype="Ignored">
           <horstretch>0</horstretch>
@@ -899,7 +942,7 @@
          </font>
         </property>
         <property name="text">
-         <string>INVERT</string>
+         <string>DELETE EVENT</string>
         </property>
        </widget>
       </item>
@@ -925,7 +968,7 @@
        </widget>
       </item>
       <item>
-       <widget class="QPushButton" name="deleteeventbutton">
+       <widget class="QPushButton" name="showcatbutton">
         <property name="sizePolicy">
          <sizepolicy hsizetype="Ignored" vsizetype="Ignored">
           <horstretch>0</horstretch>
@@ -941,12 +984,12 @@
          </font>
         </property>
         <property name="text">
-         <string>DELETE EVENT</string>
+         <string>SHOW CAT. TRACE</string>
         </property>
        </widget>
       </item>
       <item>
-       <widget class="QPushButton" name="clearscatterbutton">
+       <widget class="QPushButton" name="savecatbutton">
         <property name="sizePolicy">
          <sizepolicy hsizetype="Ignored" vsizetype="Ignored">
           <horstretch>0</horstretch>
@@ -962,7 +1005,7 @@
          </font>
         </property>
         <property name="text">
-         <string>CLEAR SCATTER</string>
+         <string>SAVE CAT. TRACE</string>
         </property>
        </widget>
       </item>

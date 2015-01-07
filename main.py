@@ -29,7 +29,8 @@ class GUIForm(QtGui.QMainWindow):
         QtCore.QObject.connect(self.ui.previousfilebutton, QtCore.SIGNAL('clicked()'), self.previousfile)
         QtCore.QObject.connect(self.ui.savetracebutton, QtCore.SIGNAL('clicked()'), self.savetrace)
         QtCore.QObject.connect(self.ui.saveasmatbutton, QtCore.SIGNAL('clicked()'), self.saveasmat)
-
+        QtCore.QObject.connect(self.ui.showcatbutton, QtCore.SIGNAL('clicked()'), self.showcattrace)
+        QtCore.QObject.connect(self.ui.savecatbutton, QtCore.SIGNAL('clicked()'), self.savecattrace)
         
         QtCore.QObject.connect(self.ui.gobutton, QtCore.SIGNAL('clicked()'), self.inspectevent)
         QtCore.QObject.connect(self.ui.previousbutton, QtCore.SIGNAL('clicked()'), self.previousevent)
@@ -77,6 +78,7 @@ class GUIForm(QtGui.QMainWindow):
         self.frac=[]
         self.dwell=[]
         self.dt=[]
+        self.catdata=[]
 
  
     def Load(self): 
@@ -608,9 +610,34 @@ class GUIForm(QtGui.QMainWindow):
         self.Load()
         
     def savetrace(self):
-        newfilename = QtGui.QFileDialog.getSaveFileName(self, 'New File name',self.direc,'*.csv') 
-        np.savetxt(str(newfilename),self.data,delimiter=",")
+        self.data.astype('d').tofile(self.matfilename+'_trace.bin')
         
+    def showcattrace(self):
+        eventbuffer=np.int(self.ui.eventbufferentry.text())
+        numberofevents=len(self.dt)
+        self.catdata=self.data[startpoints[0]-eventbuffer:endpoints[0]+eventbuffer]
+        for i in range(numberofevents):
+            if i<numberofevents-1:
+                if endpoints[i]+eventbuffer>startpoints[i+1]:
+                    print 'overlapping event'
+                else:
+                    self.catdata=np.concatenate((self.catdata,self.data[startpoints[i]-eventbuffer:endpoints[i]+eventbuffer]),0)
+        else: 
+            self.catdata=np.concatenate((self.catdata,self.data[startpoints[i]-eventbuffer:endpoints[i]+eventbuffer]),0)
+        self.tcat=np.arange(0,len(self.catdata))
+        self.tcat=self.tcat/self.outputsamplerate
+        
+        self.p1.clear()
+        self.p1.plot(self.tcat,self.catdata,pen='b')
+        self.p1.autoRange()
+ 
+    def savecattrace(self):
+        if self.catdata==[]:
+            self.showcattrace
+        self.catdata=self.catdata[::10]
+        self.catdata.astype('d').tofile(self.matfilename+'_cattrace.bin')        
+        
+       
     def keyPressEvent(self, event):
         key = event.key()
         if key == QtCore.Qt.Key_Up:
