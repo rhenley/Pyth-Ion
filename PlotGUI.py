@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'plotgui.ui'
 #
-# Created: Tue Jan 06 15:02:00 2015
+# Created: Fri Jan 16 11:16:00 2015
 #      by: PyQt4 UI code generator 4.9.6
 #
 # WARNING! All changes made in this file will be lost!
@@ -148,7 +148,7 @@ class Ui_PythIon(object):
         sizePolicy.setHeightForWidth(self.eventplot.sizePolicy().hasHeightForWidth())
         self.eventplot.setSizePolicy(sizePolicy)
         font = QtGui.QFont()
-        font.setFamily(_fromUtf8("Kozuka Gothic Pro L"))
+        font.setFamily(_fromUtf8("Arial"))
         font.setPointSize(20)
         font.setBold(False)
         font.setItalic(False)
@@ -164,7 +164,7 @@ class Ui_PythIon(object):
         sizePolicy.setHeightForWidth(self.scatterplot.sizePolicy().hasHeightForWidth())
         self.scatterplot.setSizePolicy(sizePolicy)
         font = QtGui.QFont()
-        font.setFamily(_fromUtf8("Kozuka Gothic Pro L"))
+        font.setFamily(_fromUtf8("Arial"))
         font.setPointSize(20)
         font.setBold(False)
         font.setItalic(False)
@@ -704,7 +704,7 @@ class Ui_PythIon(object):
         self.showcatbutton.setText(_translate("PythIon", "SHOW CAT. TRACE", None))
         self.savecatbutton.setText(_translate("PythIon", "SAVE CAT. TRACE", None))
         self.savetracebutton.setText(_translate("PythIon", "SAVE TRACE", None))
-        self.saveasmatbutton.setText(_translate("PythIon", "SAVE AS .MAT", None))
+        self.saveasmatbutton.setText(_translate("PythIon", "SAVE EVENT FITS", None))
         self.menuFile.setTitle(_translate("PythIon", "File", None))
         self.menuEdit.setTitle(_translate("PythIon", "Edit", None))
         self.actionInvert.setText(_translate("PythIon", "Invert data", None))

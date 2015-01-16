@@ -28,7 +28,6 @@ class GUIForm(QtGui.QMainWindow):
         QtCore.QObject.connect(self.ui.nextfilebutton, QtCore.SIGNAL('clicked()'), self.nextfile)
         QtCore.QObject.connect(self.ui.previousfilebutton, QtCore.SIGNAL('clicked()'), self.previousfile)
         QtCore.QObject.connect(self.ui.savetracebutton, QtCore.SIGNAL('clicked()'), self.savetrace)
-        QtCore.QObject.connect(self.ui.saveasmatbutton, QtCore.SIGNAL('clicked()'), self.saveasmat)
         QtCore.QObject.connect(self.ui.showcatbutton, QtCore.SIGNAL('clicked()'), self.showcattrace)
         QtCore.QObject.connect(self.ui.savecatbutton, QtCore.SIGNAL('clicked()'), self.savecattrace)
         
@@ -325,26 +324,38 @@ class GUIForm(QtGui.QMainWindow):
          np.savetxt(self.matfilename+'DB.txt',np.column_stack((self.deli,self.frac,self.dwell,self.dt)),delimiter='\t')
 
     def inspectevent(self):
+                
+        #Reset plot
         self.p3.showAxis('bottom')
         self.p3.showAxis('left')
         self.numberofevents=len(self.dt)
         self.totalplotpoints=len(self.p2.data)
         self.p3.clear()
         
+        #Correct for user error if non-extistent number is entered        
         eventbuffer=np.int(self.ui.eventbufferentry.text())
         eventnumber=np.int(self.ui.eventnumberentry.text())
         if eventnumber>=self.numberofevents:
             eventnumber=self.numberofevents-1
             self.ui.eventnumberentry.setText(str(eventnumber))
-        self.p3.plot(self.t[startpoints[eventnumber]-eventbuffer:endpoints[eventnumber]+eventbuffer],self.data[startpoints[eventnumber]-eventbuffer:endpoints[eventnumber]+eventbuffer],pen='b')
-        self.p3.addLine(y=self.baseline-self.deli[eventnumber],pen=(173,27,183))
+            
+        #plot event trace
+        self.p3.plot(self.t[startpoints[eventnumber]-eventbuffer:endpoints[eventnumber]+eventbuffer],
+                     self.data[startpoints[eventnumber]-eventbuffer:endpoints[eventnumber]+eventbuffer],pen='b')
+                     
+        #plot event fit
+        self.p3.plot(self.t[startpoints[eventnumber]-eventbuffer:endpoints[eventnumber]+eventbuffer],np.concatenate((
+                     np.repeat(np.array([self.baseline]),eventbuffer),np.repeat(np.array([self.baseline-self.deli[eventnumber
+                     ]]),endpoints[eventnumber]-startpoints[eventnumber]),np.repeat(np.array([self.baseline]),eventbuffer)),0),pen=pg.mkPen(color=(173,27,183),width=3))        
 
+        #Mark event that is being viewed on scatter plot
         colors=[]
         colors[0:self.totalplotpoints-self.numberofevents]=[.5]*self.totalplotpoints
         colors[self.totalplotpoints-self.numberofevents:self.totalplotpoints]=['b']*self.numberofevents
         colors[self.totalplotpoints-self.numberofevents+eventnumber]='r'
         self.p2.setBrush(colors, mask=None)
 
+        #Mark event start and end points
         self.p3.plot([self.t[startpoints[eventnumber]], self.t[startpoints[eventnumber]]],[self.data[startpoints[eventnumber]], self.data[startpoints[eventnumber]]],pen=None, symbol='o',symbolBrush='g',symbolSize=5)
         self.p3.plot([self.t[endpoints[eventnumber]], self.t[endpoints[eventnumber]]],[self.data[endpoints[eventnumber]], self.data[endpoints[eventnumber]]],pen=None, symbol='o',symbolBrush='r',symbolSize=5)
 
@@ -353,71 +364,24 @@ class GUIForm(QtGui.QMainWindow):
         self.p3.autoRange()
         
     def nextevent(self):
-        self.p3.showAxis('bottom')
-        self.p3.showAxis('left')
-        self.numberofevents=len(self.dt)
-        self.totalplotpoints=len(self.p2.data)
-        self.p3.clear()
         eventnumber=np.int(self.ui.eventnumberentry.text())
-        eventbuffer=np.int(self.ui.eventbufferentry.text())
-
 
         if eventnumber>=self.numberofevents-1:  
             eventnumber=0
         else:
             eventnumber=np.int(self.ui.eventnumberentry.text())+1  
-
-        self.p3.plot(self.t[startpoints[eventnumber]-eventbuffer:endpoints[eventnumber]+eventbuffer],self.data[startpoints[eventnumber]-eventbuffer:endpoints[eventnumber]+eventbuffer],pen='b')
-        self.p3.addLine(y=self.baseline-self.deli[eventnumber],pen=(173,27,183))
         self.ui.eventnumberentry.setText(str(eventnumber))
+        self.inspectevent()
         
-        #cant plot only one item? so I doubled it
+    def previousevent(self):  
         
-        colors=[]
-        colors[0:self.totalplotpoints-self.numberofevents]=[.5]*self.totalplotpoints
-        colors[self.totalplotpoints-self.numberofevents:self.totalplotpoints]=['b']*self.numberofevents
-        colors[self.totalplotpoints-self.numberofevents+eventnumber]='r'
-        self.p2.setBrush(colors, mask=None)
-        
-        
-        self.p3.plot([self.t[startpoints[eventnumber]], self.t[startpoints[eventnumber]]],[self.data[startpoints[eventnumber]], self.data[startpoints[eventnumber]]],pen=None, symbol='o',symbolBrush='g',symbolSize=5)
-        self.p3.plot([self.t[endpoints[eventnumber]], self.t[endpoints[eventnumber]]],[self.data[endpoints[eventnumber]], self.data[endpoints[eventnumber]]],pen=None, symbol='o',symbolBrush='r',symbolSize=5)
+        eventnumber=np.int(self.ui.eventnumberentry.text())
 
-        self.ui.eventinfolabel.setText('Dwell Time=' + str(round(self.dwell[eventnumber],2))+ u' μs,   Deli='+str(round(self.deli[eventnumber],2)) +' nA')
-        self.lastevent=eventnumber
-        self.p3.autoRange()
-        
-    def previousevent(self):      
-        self.p3.showAxis('bottom')
-        self.p3.showAxis('left')
-        self.numberofevents=len(self.dt)
-        self.totalplotpoints=len(self.p2.data)
-        self.p3.clear()
-        eventbuffer=np.int(self.ui.eventbufferentry.text())
-        
-        
         eventnumber=np.int(self.ui.eventnumberentry.text())-1
         if eventnumber<0:
             eventnumber=self.numberofevents-1
-        self.p3.plot(self.t[startpoints[eventnumber]-eventbuffer:endpoints[eventnumber]+eventbuffer],self.data[startpoints[eventnumber]-eventbuffer:endpoints[eventnumber]+eventbuffer],pen='b')
-        self.p3.addLine(y=self.baseline-self.deli[eventnumber],pen=(173,27,183))
-        self.ui.eventnumberentry.setText(str(eventnumber)  )
-
-
-        colors=[]
-        colors[0:self.totalplotpoints-self.numberofevents]=[.5]*self.totalplotpoints
-        colors[self.totalplotpoints-self.numberofevents:self.totalplotpoints]=['b']*self.numberofevents
-        colors[self.totalplotpoints-self.numberofevents+eventnumber]='r'
-        self.p2.setBrush(colors, mask=None)
-
-
-
-        self.p3.plot([self.t[startpoints[eventnumber]], self.t[startpoints[eventnumber]]],[self.data[startpoints[eventnumber]], self.data[startpoints[eventnumber]]],pen=None, symbol='o',symbolBrush='g',symbolSize=5)
-        self.p3.plot([self.t[endpoints[eventnumber]], self.t[endpoints[eventnumber]]],[self.data[endpoints[eventnumber]], self.data[endpoints[eventnumber]]],pen=None, symbol='o',symbolBrush='r',symbolSize=5)
-
-        self.ui.eventinfolabel.setText('Dwell Time=' + str(round(self.dwell[eventnumber],2))+ u' μs,   Deli='+str(round(self.deli[eventnumber],2)) +' nA')
-        self.lastevent=eventnumber
-        self.p3.autoRange()
+        self.ui.eventnumberentry.setText(str(eventnumber))
+        self.inspectevent()
         
     def cut(self):              
         if self.lr==[]:
@@ -616,25 +580,29 @@ class GUIForm(QtGui.QMainWindow):
         eventbuffer=np.int(self.ui.eventbufferentry.text())
         numberofevents=len(self.dt)
         self.catdata=self.data[startpoints[0]-eventbuffer:endpoints[0]+eventbuffer]
+        self.catfits=np.concatenate((np.repeat(np.array([self.baseline]),eventbuffer),np.repeat(np.array([
+            self.baseline-self.deli[0]]),endpoints[0]-startpoints[0]),
+            np.repeat(np.array([self.baseline]),eventbuffer)),0)
         for i in range(numberofevents):
             if i<numberofevents-1:
                 if endpoints[i]+eventbuffer>startpoints[i+1]:
                     print 'overlapping event'
                 else:
                     self.catdata=np.concatenate((self.catdata,self.data[startpoints[i]-eventbuffer:endpoints[i]+eventbuffer]),0)
-        else: 
-            self.catdata=np.concatenate((self.catdata,self.data[startpoints[i]-eventbuffer:endpoints[i]+eventbuffer]),0)
+                    self.catfits=np.concatenate((self.catfits,np.concatenate((np.repeat(np.array([self.baseline]),eventbuffer),np.repeat(np.array([
+                        self.baseline-self.deli[i]]),endpoints[i]-startpoints[i]),np.repeat(np.array([self.baseline]),eventbuffer)),0)),0)
         self.tcat=np.arange(0,len(self.catdata))
-        self.tcat=self.tcat/self.outputsamplerate
+        self.tcat=self.tcat/self.outputsamplerate        
         
         self.p1.clear()
         self.p1.plot(self.tcat,self.catdata,pen='b')
+        self.p1.plot(self.tcat,self.catfits,pen=pg.mkPen(color=(173,27,183),width=2))
         self.p1.autoRange()
  
     def savecattrace(self):
         if self.catdata==[]:
             self.showcattrace
-        self.catdata=self.catdata[::10]
+#        self.catdata=self.catdata[::10]
         self.catdata.astype('d').tofile(self.matfilename+'_cattrace.bin')        
         
        
@@ -649,10 +617,14 @@ class GUIForm(QtGui.QMainWindow):
         if key == QtCore.Qt.Key_Left:
             self.previousevent()            
         if key == QtCore.Qt.Key_Return:
-            self.Load()  
+            self.Load()
+        if key == QtCore.Qt.Key_Space:
+            self.analyze()  
         
-    def saveasmat(self):
-        io.savemat(self.matfilename+'py.mat',{'test':self.data})
+    def saveeventfits(self):
+        if self.catdata==[]:
+            self.showcattrace
+        self.catfits.astype('d').tofile(self.matfilename+'_catfits.bin')   
 
 
  
