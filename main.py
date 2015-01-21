@@ -625,11 +625,7 @@ class GUIForm(QtGui.QMainWindow):
     def saveeventfits(self):
         if self.catdata==[]:
             self.showcattrace
-<<<<<<< HEAD
         self.catdata.astype('d').tofile(self.matfilename+'_catfit.bin')   
-=======
-        self.catfits.astype('d').tofile(self.matfilename+'_catfits.bin')   
->>>>>>> origin/master
 
 
  
