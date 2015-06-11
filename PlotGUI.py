@@ -3,10 +3,14 @@
 # Form implementation generated from reading ui file 'plotgui.ui'
 #
 <<<<<<< HEAD
+<<<<<<< HEAD
 # Created: Tue Jan 20 09:56:46 2015
 =======
 # Created: Fri Jan 16 11:16:00 2015
 >>>>>>> FETCH_HEAD
+=======
+# Created: Fri Jan 16 11:16:00 2015
+>>>>>>> origin/master
 #      by: PyQt4 UI code generator 4.9.6
 #
 # WARNING! All changes made in this file will be lost!
