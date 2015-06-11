@@ -8,7 +8,7 @@ from scipy import io
 from PlotGUI import *
 import pyqtgraph as pg
 import pandas.io.parsers
-from lmfit import Minimizer, Parameters
+#from lmfit import Minimizer, Parameters
  
 class GUIForm(QtGui.QMainWindow):
     
