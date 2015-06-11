@@ -16,7 +16,8 @@ The following packages are prerequisites for Pyth-Ion
 2. numpy
 3. pyqtgraph
 4. PyQt4
+5. Pandas
 
 Scientific distributions such as Anaconda or WinPython should have most if not all of these packages preinstalled
 
-Once you have these packages simply download the Pyth-Ion .zip and unpack the folder to wherever you choose. Then navigate to the Pyth-Ion folder from command prompt (or terminal if you're using a mac) and type "python main.py" and the Pyth-Ion GUI should appear.
+Once you have these packages simply download the Pyth-Ion .zip and unpack the folder to wherever you choose. Then navigate to the Pyth-Ion folder from command prompt (or terminal if you're using a mac) and type "python pythion.py" and the Pyth-Ion GUI should appear.
