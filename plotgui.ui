@@ -1031,7 +1031,7 @@
          </sizepolicy>
         </property>
         <property name="text">
-         <string>SAVE AS .MAT</string>
+         <string>SAVE EVENT FITS</string>
         </property>
        </widget>
       </item>

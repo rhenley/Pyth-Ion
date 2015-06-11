@@ -7,6 +7,8 @@ from scipy import signal
 from scipy import io
 from PlotGUI import *
 import pyqtgraph as pg
+import pandas.io.parsers
+from lmfit import Minimizer, Parameters
  
 class GUIForm(QtGui.QMainWindow):
     
@@ -28,9 +30,9 @@ class GUIForm(QtGui.QMainWindow):
         QtCore.QObject.connect(self.ui.nextfilebutton, QtCore.SIGNAL('clicked()'), self.nextfile)
         QtCore.QObject.connect(self.ui.previousfilebutton, QtCore.SIGNAL('clicked()'), self.previousfile)
         QtCore.QObject.connect(self.ui.savetracebutton, QtCore.SIGNAL('clicked()'), self.savetrace)
-        QtCore.QObject.connect(self.ui.saveasmatbutton, QtCore.SIGNAL('clicked()'), self.saveasmat)
         QtCore.QObject.connect(self.ui.showcatbutton, QtCore.SIGNAL('clicked()'), self.showcattrace)
         QtCore.QObject.connect(self.ui.savecatbutton, QtCore.SIGNAL('clicked()'), self.savecattrace)
+        QtCore.QObject.connect(self.ui.saveasmatbutton, QtCore.SIGNAL('clicked()'), self.saveeventfits)
         
         QtCore.QObject.connect(self.ui.gobutton, QtCore.SIGNAL('clicked()'), self.inspectevent)
         QtCore.QObject.connect(self.ui.previousbutton, QtCore.SIGNAL('clicked()'), self.previousevent)
@@ -44,6 +46,7 @@ class GUIForm(QtGui.QMainWindow):
         self.p1 = self.ui.signalplot.addPlot()
         self.p1.setLabel('bottom', text='Time', units='s')
         self.p1.setLabel('left', text='Current', units='nA')
+        self.p1.enableAutoRange(axis = 'x')
         
 #        self.p2 = self.ui.scatterplot.addPlot()
 
@@ -54,6 +57,9 @@ class GUIForm(QtGui.QMainWindow):
         self.w1.setLabel('bottom', text='Time', units=u'μs')
         self.w1.setLabel('left', text='Fractional Current Blockage')
         self.w1.setLogMode(x=True,y=False)
+        self.cb = pg.ColorButton(self.ui.scatterplot, color=(0,0,255,50))
+        self.cb.move(450,250)
+        self.cb.show()
         
         self.p3=self.ui.eventplot.addPlot()
 #        self.p3.setLabel('bottom', text='Time', units=u'μs')
@@ -82,6 +88,7 @@ class GUIForm(QtGui.QMainWindow):
 
  
     def Load(self): 
+        self.catdata=[]
         self.p1.clear()
         self.p3.clear()
         self.p3.hideAxis('bottom')
@@ -95,20 +102,20 @@ class GUIForm(QtGui.QMainWindow):
         self.totalplotpoints=len(self.p2.data)
         self.ui.eventnumberentry.setText(str(0))
 
-        colors=[]
-        colors[0:self.totalplotpoints]=[.5]*self.totalplotpoints
-        self.p2.setBrush(colors, mask=None) 
+#        colors=[]
+#        colors[0:self.totalplotpoints]=[.5]*self.totalplotpoints
+#        self.p2.setBrush(colors, mask=None) 
 
         self.threshold=np.float64(self.ui.thresholdentry.text()) 
         self.ui.filelabel.setText(self.datafilename)
         print self.datafilename  
-        self.LPfiltercutoff = np.float64(self.ui.LPentry.text())*1000                
+        self.LPfiltercutoff = np.float64(self.ui.LPentry.text())*1000
+        self.outputsamplerate = np.float64(self.ui.outputsamplerateentry.text())*1000 #use integer multiples of 4166.67 ie 2083.33 or 1041.67
+                
 
         if str(os.path.splitext(self.datafilename)[1])=='.log':         
             self.data=np.fromfile(self.datafilename,self.CHIMERAfile) 
-            
-            self.outputsamplerate = np.float64(self.ui.outputsamplerateentry.text())*1000 #use integer multiples of 4166.67 ie 2083.33 or 1041.67
-                  
+                              
             self.matfilename=str(os.path.splitext(self.datafilename)[0])       
             self.mat = io.loadmat(self.matfilename)
       
@@ -142,8 +149,7 @@ class GUIForm(QtGui.QMainWindow):
 
         if str(os.path.splitext(self.datafilename)[1])=='.opt': 
             self.data=np.fromfile(self.datafilename, dtype = np.dtype('>d'))            
-#            self.outputsamplerate  =250e3    
-            self.outputsamplerate  =250e3             
+#            self.outputsamplerate  =250e3                
             self.data=self.data*10**9
             
                         
@@ -152,8 +158,9 @@ class GUIForm(QtGui.QMainWindow):
             
             self.data = signal.filtfilt(b,a,self.data)
 
-        else:  
-            print "error: unknown data type"
+        if str(os.path.splitext(self.datafilename)[1])=='.txt':
+            self.data=pandas.io.parsers.read_csv(self.datafilename,skiprows=1)
+            self.data=np.reshape(np.array(self.data),np.size(self.data))*10**9
         
         self.t=np.arange(0,len(self.data))
         self.t=self.t/self.outputsamplerate
@@ -178,122 +185,105 @@ class GUIForm(QtGui.QMainWindow):
                
         
         if self.direc==[]:
-            self.datafilename = str(QtGui.QFileDialog.getOpenFileName(self, 'Open file',os.getcwd(),("*.log;*.opt"))  )
+            self.datafilename = str(QtGui.QFileDialog.getOpenFileName(self, 'Open file',os.getcwd(),("*.log;*.opt;*.txt"))  )
             self.direc=os.path.dirname(self.datafilename)            
         else:
-            self.datafilename = str(QtGui.QFileDialog.getOpenFileName(self,'Open file',self.direc,("*.log;*.opt"))) 
+            self.datafilename = str(QtGui.QFileDialog.getOpenFileName(self,'Open file',self.direc,("*.log;*.opt;*.txt"))) 
             self.direc=os.path.dirname(self.datafilename)   
 #        filelistsize=np.size()
         
         self.Load() 
         
     def analyze(self):
-        global startpoints,endpoints
+        global startpoints,endpoints, mins
 
-        self.threshold=np.float64(self.ui.thresholdentry.text())   
+        self.threshold = np.float64(self.ui.thresholdentry.text())  
         
-        below=np.where(self.data<self.threshold)[0]
-        startandend=np.diff(below)
-        startandend[len(startandend)-1]=1
-        startandend=np.where(startandend>1)[0]
-        endpoints=below[startandend]
-        startpoints=below[startandend+1]
-        startpoints=np.append(below[0],startpoints)
-        endpoints=np.append(endpoints,below[len(below)-1])
-        numberofevents=len(startpoints)
-#        print numberofevents 
+#### find all points below threshold ####
         
+        below = np.where(self.data < self.threshold)[0]
         
-        thresholdcrossingdown=startpoints
-        thresholdcrossingup=endpoints
-        highthresh=self.baseline-self.var
-        j=0
-        while j<len(startpoints):
-            i=startpoints[j]
-            while self.data[i]< highthresh:
-                i=i-1
-                if j!=0:
-                    if i<endpoints[j-1]:
-                        i=0
-                        break
-            startpoints[j]=i
-            j=j+1
-        j=0
-        endpoints=endpoints[startpoints!=0]
-        thresholdcrossingdown=thresholdcrossingdown[startpoints!=0]
-        thresholdcrossingup=thresholdcrossingup[startpoints!=0]
-        startpoints=startpoints[startpoints!=0]
-        while j<len(endpoints):
-            i=endpoints[j]
-            while self.data[i]< highthresh:
-                if i==len(self.data)-1:
-                    i=1
-                    break                                
-                i=i+1
-            i=i-1
-            endpoints[j]=i
-            j=j+1
-        startpoints=startpoints[endpoints!=0]
-        thresholdcrossingdown=thresholdcrossingdown[endpoints!=0]
-        thresholdcrossingup=thresholdcrossingup[endpoints!=0]
-        endpoints=endpoints[endpoints!=0]
-        numberofevents=len(startpoints) 
-#        print(numberofevents)
+#### locate the points where the current crosses the threshold ####
+
+        startandend = np.diff(below)
+        startpoints = np.insert(startandend, 0, 2)
+        endpoints = np.insert(startandend, -1, 2)
+        startpoints = np.where(startpoints>1)[0]
+        endpoints = np.where(endpoints>1)[0]
+        startpoints = below[startpoints]
+        endpoints = below[endpoints]
+
+#### Eliminate events that start before file or end after file ####        
         
-        
-        
-        
-        
-        
+        if startpoints[0] == 0:
+            startpoints = np.delete(startpoints,0)
+            endpoints = np.delete(endpoints,0)
+        if endpoints [-1] == len(self.data)-1:
+            startpoints = np.delete(startpoints,-1)
+            endpoints = np.delete(endpoints,-1)
+    
+#### Track points back up to baseline to find true start and end ####    
+ 
+        numberofevents=len(startpoints)   
+        highthresh = self.baseline - self.var
+
+        for j in range(numberofevents):
+            sp = startpoints[j] #mark initial guess for starting point
+            while self.data[sp] < highthresh and sp > 0:
+                sp = sp-1 # track back until we return to baseline     
+            startpoints[j] = sp # mark true startpoint
             
-        self.dwell=np.zeros(numberofevents)
-        self.deli=np.zeros(numberofevents)  
-        self.dt=np.zeros(numberofevents)
+            ep = endpoints[j] #repeat process for end points
+            while self.data[ep] < highthresh:
+                ep = ep+1
+                if j == numberofevents - 1: # if this is the last event, check to make
+                    if ep == len(self.data) -1:  # sure that the current returns to baseline
+                        endpoints[j] = 0              # before file ends. If not, mark points for
+                        startpoints[j] = 0              # deletion and break from loop
+                        ep = 0                        
+                        break
+                elif ep > startpoints[j+1]: # if we hit the next startpoint before we
+                    startpoints[j+1] = 0    # return to baseline, mark for deletion
+                    endpoints[j] = 0                  # and break out of loop  
+                    ep = 0                    
+                    break
+            endpoints[j] = ep
+            
+        startpoints = startpoints[startpoints!=0] # delete those events marked for
+        endpoints = endpoints[endpoints!=0]       # deletion earlier
+        self.numberofevents = len(startpoints)
+
+#### Now we want to move the endpoints to be the last minimum for each ####
+#### event so we find all minimas for each event, and set endpoint to last ####
+           
+        self.deli = np.zeros(self.numberofevents)
+        self.dwell = np.zeros(self.numberofevents)
         
-        i=0
-        while i<numberofevents:
-#            mins=signal.argrelmin(self.data[thresholdcrossingdown[i]:thresholdcrossingup[i]],mode='wrap')[0]+thresholdcrossingdown[i]           
-            mins=signal.argrelmin(self.data[startpoints[i]:endpoints[i]],mode='wrap')[0]+startpoints[i]           
-            while len(mins)==0:
-                startpoints=np.delete(startpoints,i)
-                endpoints=np.delete(endpoints,i)
-                numberofevents=numberofevents-1
-                mins=signal.argrelmin(self.data[startpoints[i]:endpoints[i]],mode='wrap')[0]+startpoints[i]           
-            if mins[0]==0:
-                startpoints=np.delete(startpoints,i)
-                endpoints=np.delete(endpoints,i)
-                numberofevents=numberofevents-1
-                mins=signal.argrelmin(self.data[startpoints[i]:endpoints[i]],mode='wrap')[0]+startpoints[i]       
-            else:
-                mins=mins[self.data[mins]<self.threshold]            
-            if len(mins)==1: 
-                if mins[-1]==startpoints[i]:
-                    self.deli[i]=-1
-                    self.dwell[i]=-1
-                else:
-                    self.deli[i]=self.baseline-np.mean(self.data[mins[0]-1:mins[0]+1])
-                    self.dwell[i]=(mins[-1]-startpoints[i])/self.outputsamplerate*1e6
-                    endpoints[i]=mins[-1]
-            if len(mins)>1:
-                if mins[-1]==startpoints[i]:
-                    self.deli[i]=-1
-                    self.dwell[i]=-1
-                else:
-                    self.deli[i]=self.baseline-np.mean(self.data[mins[0]:mins[-1]])
-                    self.dwell[i]=(mins[-1]-startpoints[i])/self.outputsamplerate*1e6
-                    endpoints[i]=mins[-1]
-            i=i+1
+        for i in range(self.numberofevents):
+            mins = np.array(signal.argrelmin(self.data[startpoints[i]:endpoints[i]])[0] + startpoints[i])
+            mins = mins[self.data[mins] < self.baseline - 4*self.var]
+            if len(mins) == 1:
+                pass
+                self.deli[i] = self.baseline - min(self.data[startpoints[i]:endpoints[i]])
+                self.dwell[i] = (endpoints[i]-startpoints[i])*1e6/self.outputsamplerate
+#                self.deli[i] = self.bwlanalysis(i, 1000)
+                endpoints[i] = mins[0]
+            elif len(mins) > 1:
+                self.deli[i] = self.baseline - np.mean(self.data[mins[0]:mins[-1]])
+#                self.dwell[i] = (endpoints[i]-startpoints[i])*1e6/self.outputsamplerate
+#                self.deli[i] = self.bwlanalysis(i, 100)
+                endpoints[i] = mins[-1]
+                self.dwell[i] = (endpoints[i]-startpoints[i])*1e6/self.outputsamplerate
+                
+
+        startpoints = startpoints[self.deli!=0]
+        endpoints = endpoints[self.deli!=0]  
+        self.deli = self.deli[self.deli!=0]
+        self.dwell = self.dwell[self.dwell!=0]
+        self.frac = self.deli/self.baseline 
+        self.dt = np.array(0)
+        self.dt=np.append(self.dt,np.diff(startpoints)/self.outputsamplerate)
         
-        self.deli=self.deli[self.deli!=-1]
-        self.dwell=self.dwell[self.dwell!=-1]
-        self.dt=np.diff(startpoints)/self.outputsamplerate
-        self.deli=self.deli[self.deli!=0]
-        self.dwell=self.dwell[self.dwell!=0]
-        self.dt=self.dt[self.dt!=0]
-        self.dt=np.append(0,self.dt)
-        self.frac=self.deli/self.baseline
-        
-#        print self.dwell, self.deli, self.dt
         
         self.p1.clear()       
         
@@ -302,14 +292,14 @@ class GUIForm(QtGui.QMainWindow):
         self.p1.plot(self.t[startpoints], self.data[startpoints],pen=None, symbol='o',symbolBrush='g',symbolSize=5)
         self.p1.plot(self.t[endpoints], self.data[endpoints], pen=None, symbol='o',symbolBrush='r',symbolSize=5)
         
-        self.ui.eventcounterlabel.setText('Events:'+str(numberofevents))
+        self.ui.eventcounterlabel.setText('Events:'+str(self.numberofevents))
         self.ui.meandelilabel.setText('Deli:'+str(round(np.mean(self.deli),2))+' nA')
 #        self.ui.meandwelllabel.setText('Dwell:'+str(round(np.e**mean(log(self.dwell)),2))+ u' μs')
         self.ui.meandwelllabel.setText('Dwell:'+str(round(np.median(self.dwell),2))+ u' μs')
-        self.ui.meandtlabel.setText('Rate:'+str(round(numberofevents/self.t[-1],1))+' events/s')
+        self.ui.meandtlabel.setText('Rate:'+str(round(self.numberofevents/self.t[-1],1))+' events/s')
 
 #        self.p2.addPoints(x=np.log10(self.dwell),y=self.deli, symbol='o',brush='b')
-        self.p2.addPoints(x=np.log10(self.dwell),y=self.frac, symbol='o',brush='b')
+        self.p2.addPoints(x=np.log10(self.dwell),y=self.frac, symbol='o',brush=(self.cb.color()), pen = None)
 
         self.w1.addItem(self.p2)
         self.w1.setLogMode(x=True,y=False)
@@ -319,105 +309,120 @@ class GUIForm(QtGui.QMainWindow):
         self.w1.setRange(yRange=[0,1])
         
         self.save()
-        
 
     def save(self):  
          np.savetxt(self.matfilename+'DB.txt',np.column_stack((self.deli,self.frac,self.dwell,self.dt)),delimiter='\t')
 
     def inspectevent(self):
+                
+        #Reset plot
         self.p3.showAxis('bottom')
         self.p3.showAxis('left')
         self.numberofevents=len(self.dt)
-        self.totalplotpoints=len(self.p2.data)
+        self.totalplotpoints = len(self.p2.data)
         self.p3.clear()
         
+        #Correct for user error if non-extistent number is entered        
         eventbuffer=np.int(self.ui.eventbufferentry.text())
         eventnumber=np.int(self.ui.eventnumberentry.text())
         if eventnumber>=self.numberofevents:
             eventnumber=self.numberofevents-1
             self.ui.eventnumberentry.setText(str(eventnumber))
-        self.p3.plot(self.t[startpoints[eventnumber]-eventbuffer:endpoints[eventnumber]+eventbuffer],self.data[startpoints[eventnumber]-eventbuffer:endpoints[eventnumber]+eventbuffer],pen='b')
-        self.p3.addLine(y=self.baseline-self.deli[eventnumber],pen=(173,27,183))
+            
+        #plot event trace
+        self.p3.plot(self.t[startpoints[eventnumber]-eventbuffer:endpoints[eventnumber]+eventbuffer],
+<<<<<<< HEAD:Pythion.py
+                     self.data[startpoints[eventnumber]-eventbuffer:endpoints[eventnumber]+eventbuffer], pen=None, symbol='o',symbolBrush='b',symbolSize=2)
+=======
+                     self.data[startpoints[eventnumber]-eventbuffer:endpoints[eventnumber]+eventbuffer],pen='b')
+>>>>>>> FETCH_HEAD:main.py
+                     
+        #plot event fit
+        self.p3.plot(self.t[startpoints[eventnumber]-eventbuffer:endpoints[eventnumber]+eventbuffer],np.concatenate((
+                     np.repeat(np.array([self.baseline]),eventbuffer),np.repeat(np.array([self.baseline-self.deli[eventnumber
+                     ]]),endpoints[eventnumber]-startpoints[eventnumber]),np.repeat(np.array([self.baseline]),eventbuffer)),0),pen=pg.mkPen(color=(173,27,183),width=3))        
 
+        #Mark event that is being viewed on scatter plot
         colors=[]
-        colors[0:self.totalplotpoints-self.numberofevents]=[.5]*self.totalplotpoints
-        colors[self.totalplotpoints-self.numberofevents:self.totalplotpoints]=['b']*self.numberofevents
-        colors[self.totalplotpoints-self.numberofevents+eventnumber]='r'
+        colors[0:self.totalplotpoints-self.numberofevents]=[pg.mkColor(128,128,128,50)]*self.totalplotpoints
+        colors[self.totalplotpoints-self.numberofevents:self.totalplotpoints]=[self.cb.color()]*self.numberofevents
+        colors[self.totalplotpoints-self.numberofevents+eventnumber]= pg.mkColor('r')
         self.p2.setBrush(colors, mask=None)
 
+<<<<<<< HEAD:Pythion.py
+
+        #Mark event start and end points
+        self.p3.plot([self.t[startpoints[eventnumber]], self.t[startpoints[eventnumber]]],[self.data[startpoints[eventnumber]], self.data[startpoints[eventnumber]]],pen=None, symbol='o',symbolBrush='g',symbolSize=7)
+        self.p3.plot([self.t[endpoints[eventnumber]], self.t[endpoints[eventnumber]]],[self.data[endpoints[eventnumber]], self.data[endpoints[eventnumber]]],pen=None, symbol='o',symbolBrush='r',symbolSize=7)
+=======
+        #Mark event start and end points
         self.p3.plot([self.t[startpoints[eventnumber]], self.t[startpoints[eventnumber]]],[self.data[startpoints[eventnumber]], self.data[startpoints[eventnumber]]],pen=None, symbol='o',symbolBrush='g',symbolSize=5)
         self.p3.plot([self.t[endpoints[eventnumber]], self.t[endpoints[eventnumber]]],[self.data[endpoints[eventnumber]], self.data[endpoints[eventnumber]]],pen=None, symbol='o',symbolBrush='r',symbolSize=5)
+>>>>>>> FETCH_HEAD:main.py
 
         self.ui.eventinfolabel.setText('Dwell Time=' + str(round(self.dwell[eventnumber],2))+ u' μs,   Deli='+str(round(self.deli[eventnumber],2)) +' nA')
         self.lastevent=eventnumber
         self.p3.autoRange()
-        
-    def nextevent(self):
-        self.p3.showAxis('bottom')
-        self.p3.showAxis('left')
-        self.numberofevents=len(self.dt)
-        self.totalplotpoints=len(self.p2.data)
-        self.p3.clear()
-        eventnumber=np.int(self.ui.eventnumberentry.text())
-        eventbuffer=np.int(self.ui.eventbufferentry.text())
 
+ ########################################################################   
+        
+#        x=self.data[startpoints[eventnumber]-eventbuffer:endpoints[eventnumber]+eventbuffer]
+#        mins=signal.argrelmin(x)[0]
+#        drift=.0
+#        self.fitthreshold=np.float64(self.ui.levelthresholdentry.text()) 
+#        eventfit=np.array((0))
+#        
+#        gp, gn = np.zeros(x.size), np.zeros(x.size)
+#        ta, tai, taf = np.array([[], [], []], dtype=int)
+#        tap, tan = 0, 0
+#        # Find changes (online form)
+#        for i in range(mins[0], mins[-1]):
+#            s = x[i] - x[i-1]
+#            gp[i] = gp[i-1] + s - drift  # cumulative sum for + change
+#            gn[i] = gn[i-1] - s - drift  # cumulative sum for - change
+#            if gp[i] < 0:
+#                gp[i], tap = 0, i
+#            if gn[i] < 0:
+#                gn[i], tan = 0, i
+#            if gp[i] > self.fitthreshold or gn[i] > self.fitthreshold:  # change detected!
+#                ta = np.append(ta, i)    # alarm index
+#                tai = np.append(tai, tap if gp[i] > self.fitthreshold else tan)  # start
+#                gp[i], gn[i] = 0, 0      # reset alarm                
+#        
+#        eventfit=np.repeat(np.array(self.baseline),ta[0])
+#        for i in range(1,ta.size):
+#            eventfit=np.concatenate((eventfit,np.repeat(np.array(np.mean(x[ta[i-1]:ta[i]])),ta[i]-ta[i-1])))
+#        eventfit=np.concatenate((eventfit,np.repeat(np.array(self.baseline),x.size-ta[-1])))
+#        self.p3.plot(self.t[startpoints[eventnumber]-eventbuffer:endpoints[eventnumber]+eventbuffer],eventfit
+#            ,pen=pg.mkPen(color=(255,255,0),width=3))
+##        pg.plot(eventfit)
+#        
+#        
+#        self.p3.plot(self.t[ta+startpoints[eventnumber]-eventbuffer],x[ta],pen=None,symbol='o',symbolBrush='m',symbolSize=8)
+        
+        
+ ########################################################################   
+
+       
+    def nextevent(self):
+        eventnumber=np.int(self.ui.eventnumberentry.text())
 
         if eventnumber>=self.numberofevents-1:  
             eventnumber=0
         else:
             eventnumber=np.int(self.ui.eventnumberentry.text())+1  
-
-        self.p3.plot(self.t[startpoints[eventnumber]-eventbuffer:endpoints[eventnumber]+eventbuffer],self.data[startpoints[eventnumber]-eventbuffer:endpoints[eventnumber]+eventbuffer],pen='b')
-        self.p3.addLine(y=self.baseline-self.deli[eventnumber],pen=(173,27,183))
         self.ui.eventnumberentry.setText(str(eventnumber))
+        self.inspectevent()
         
-        #cant plot only one item? so I doubled it
+    def previousevent(self):  
         
-        colors=[]
-        colors[0:self.totalplotpoints-self.numberofevents]=[.5]*self.totalplotpoints
-        colors[self.totalplotpoints-self.numberofevents:self.totalplotpoints]=['b']*self.numberofevents
-        colors[self.totalplotpoints-self.numberofevents+eventnumber]='r'
-        self.p2.setBrush(colors, mask=None)
-        
-        
-        self.p3.plot([self.t[startpoints[eventnumber]], self.t[startpoints[eventnumber]]],[self.data[startpoints[eventnumber]], self.data[startpoints[eventnumber]]],pen=None, symbol='o',symbolBrush='g',symbolSize=5)
-        self.p3.plot([self.t[endpoints[eventnumber]], self.t[endpoints[eventnumber]]],[self.data[endpoints[eventnumber]], self.data[endpoints[eventnumber]]],pen=None, symbol='o',symbolBrush='r',symbolSize=5)
+        eventnumber=np.int(self.ui.eventnumberentry.text())
 
-        self.ui.eventinfolabel.setText('Dwell Time=' + str(round(self.dwell[eventnumber],2))+ u' μs,   Deli='+str(round(self.deli[eventnumber],2)) +' nA')
-        self.lastevent=eventnumber
-        self.p3.autoRange()
-        
-    def previousevent(self):      
-        self.p3.showAxis('bottom')
-        self.p3.showAxis('left')
-        self.numberofevents=len(self.dt)
-        self.totalplotpoints=len(self.p2.data)
-        self.p3.clear()
-        eventbuffer=np.int(self.ui.eventbufferentry.text())
-        
-        
         eventnumber=np.int(self.ui.eventnumberentry.text())-1
         if eventnumber<0:
             eventnumber=self.numberofevents-1
-        self.p3.plot(self.t[startpoints[eventnumber]-eventbuffer:endpoints[eventnumber]+eventbuffer],self.data[startpoints[eventnumber]-eventbuffer:endpoints[eventnumber]+eventbuffer],pen='b')
-        self.p3.addLine(y=self.baseline-self.deli[eventnumber],pen=(173,27,183))
-        self.ui.eventnumberentry.setText(str(eventnumber)  )
-
-
-        colors=[]
-        colors[0:self.totalplotpoints-self.numberofevents]=[.5]*self.totalplotpoints
-        colors[self.totalplotpoints-self.numberofevents:self.totalplotpoints]=['b']*self.numberofevents
-        colors[self.totalplotpoints-self.numberofevents+eventnumber]='r'
-        self.p2.setBrush(colors, mask=None)
-
-
-
-        self.p3.plot([self.t[startpoints[eventnumber]], self.t[startpoints[eventnumber]]],[self.data[startpoints[eventnumber]], self.data[startpoints[eventnumber]]],pen=None, symbol='o',symbolBrush='g',symbolSize=5)
-        self.p3.plot([self.t[endpoints[eventnumber]], self.t[endpoints[eventnumber]]],[self.data[endpoints[eventnumber]], self.data[endpoints[eventnumber]]],pen=None, symbol='o',symbolBrush='r',symbolSize=5)
-
-        self.ui.eventinfolabel.setText('Dwell Time=' + str(round(self.dwell[eventnumber],2))+ u' μs,   Deli='+str(round(self.deli[eventnumber],2)) +' nA')
-        self.lastevent=eventnumber
-        self.p3.autoRange()
+        self.ui.eventnumberentry.setText(str(eventnumber))
+        self.inspectevent()
         
     def cut(self):              
         if self.lr==[]:
@@ -447,7 +452,7 @@ class GUIForm(QtGui.QMainWindow):
             self.p1.addLine(y=self.baseline,pen='g')
             self.p1.addLine(y=self.threshold,pen='r')
             self.lr=[]
-            self.p1.autoRange()
+#            self.p1.autoRange()
         
             
     def baselinecalc(self):
@@ -499,29 +504,6 @@ class GUIForm(QtGui.QMainWindow):
         self.ui.eventcounterlabel.setText('Events:'+str(numberofevents))
  
         self.inspectevent()
-
-#        self.p3.clear()
-#        self.p3.showAxis('bottom')
-#        self.p3.showAxis('left')        
-#        
-#        self.p2.setData(x=[],y=[])
-#        
-#        self.p3.plot(self.t[startpoints[eventnumber]-1000:endpoints[eventnumber]+1000]*1e6,self.data[startpoints[eventnumber]-1000:endpoints[eventnumber]+1000],pen='b')
-#        self.p3.addLine(y=self.baseline-self.deli[eventnumber],pen=(173,27,183))
-#
-#        self.p2.addPoints(np.log10(self.dwell),self.deli, symbol='o',brush='b')
-#        self.p2.addPoints(x=[np.log10(self.dwell[eventnumber]),np.log10(self.dwell[eventnumber])],y=[self.deli[eventnumber],self.deli[eventnumber]], symbol='o',brush='r')
-#        self.totalplotpoints=len(self.p2.data)        
-#        
-#        colors=[]
-#        colors[0:self.totalplotpoints-self.numberofevents]=[.5]*self.totalplotpoints
-#        colors[self.totalplotpoints-self.numberofevents:self.totalplotpoints]=['b']*self.numberofevents
-#        colors[self.totalplotpoints-self.numberofevents+eventnumber]='r'
-#        self.p2.setBrush(colors, mask=None)
-#        
-#        self.p3.plot([self.t[startpoints[eventnumber]]*1e6, self.t[startpoints[eventnumber]]*1e6],[self.data[startpoints[eventnumber]], self.data[startpoints[eventnumber]]],pen=None, symbol='o',symbolBrush='g',symbolSize=5)
-#        self.p3.plot([self.t[endpoints[eventnumber]]*1e6, self.t[endpoints[eventnumber]]*1e6],[self.data[endpoints[eventnumber]], self.data[endpoints[eventnumber]]],pen=None, symbol='o',symbolBrush='r',symbolSize=5)
-
         
     def invertdata(self):
         self.p1.clear()
@@ -540,18 +522,18 @@ class GUIForm(QtGui.QMainWindow):
         self.totalplotpoints=len(self.p2.data)
         self.numberofevents=len(self.dt)
         colors=[]
-        colors[0:self.totalplotpoints-self.numberofevents]=[.5]*self.totalplotpoints
-        colors[self.totalplotpoints-self.numberofevents:self.totalplotpoints]=['b']*self.numberofevents
+        colors[0:self.totalplotpoints-self.numberofevents]=[pg.mkColor(.5)]*self.totalplotpoints
+        colors[self.totalplotpoints-self.numberofevents:self.totalplotpoints]=[pg.mkColor('b')]*self.numberofevents
         self.p2.setBrush(colors, mask=None)
         
         
         for p in points:
-            p.setBrush('r')
+            p.setBrush(pg.mkColor('r'))
             
 
         i=0
         while i < self.totalplotpoints :
-            if self.p2.data[i][5]=='b' or self.p2.data[i][5]==None or self.p2.data[i][5]==.5:
+            if self.p2.data[i][5]==pg.mkColor('b') or self.p2.data[i][5]==None or self.p2.data[i][5]==pg.mkColor(.5):
                 i=i+1
             else:
                 if i<self.totalplotpoints-self.numberofevents:
@@ -613,28 +595,49 @@ class GUIForm(QtGui.QMainWindow):
         self.data.astype('d').tofile(self.matfilename+'_trace.bin')
         
     def showcattrace(self):
+        global eventstruct
         eventbuffer=np.int(self.ui.eventbufferentry.text())
         numberofevents=len(self.dt)
         self.catdata=self.data[startpoints[0]-eventbuffer:endpoints[0]+eventbuffer]
+        self.catfits=np.concatenate((np.repeat(np.array([self.baseline]),eventbuffer),np.repeat(np.array([
+            self.baseline-self.deli[0]]),endpoints[0]-startpoints[0]),
+            np.repeat(np.array([self.baseline]),eventbuffer)),0)
+<<<<<<< HEAD:Pythion.py
+        eventstruct = self.catdata                  
+        
+=======
+>>>>>>> FETCH_HEAD:main.py
         for i in range(numberofevents):
             if i<numberofevents-1:
                 if endpoints[i]+eventbuffer>startpoints[i+1]:
                     print 'overlapping event'
                 else:
                     self.catdata=np.concatenate((self.catdata,self.data[startpoints[i]-eventbuffer:endpoints[i]+eventbuffer]),0)
-        else: 
-            self.catdata=np.concatenate((self.catdata,self.data[startpoints[i]-eventbuffer:endpoints[i]+eventbuffer]),0)
+                    self.catfits=np.concatenate((self.catfits,np.concatenate((np.repeat(np.array([self.baseline]),eventbuffer),np.repeat(np.array([
+                        self.baseline-self.deli[i]]),endpoints[i]-startpoints[i]),np.repeat(np.array([self.baseline]),eventbuffer)),0)),0)
+<<<<<<< HEAD:Pythion.py
+                    eventstruct  = [np.array(self.data[startpoints[i]-eventbuffer:endpoints[i]+eventbuffer]) for i in range(numberofevents)]
+                    
+=======
+>>>>>>> FETCH_HEAD:main.py
         self.tcat=np.arange(0,len(self.catdata))
-        self.tcat=self.tcat/self.outputsamplerate
+        self.tcat=self.tcat/self.outputsamplerate        
         
         self.p1.clear()
         self.p1.plot(self.tcat,self.catdata,pen='b')
+<<<<<<< HEAD:Pythion.py
+        self.p1.plot(self.tcat,self.catfits,pen=pg.mkPen(color=(173,27,183),width=1))
+        self.p1.autoRange()                
+        
+=======
+        self.p1.plot(self.tcat,self.catfits,pen=pg.mkPen(color=(173,27,183),width=2))
         self.p1.autoRange()
+>>>>>>> FETCH_HEAD:main.py
  
     def savecattrace(self):
         if self.catdata==[]:
             self.showcattrace
-        self.catdata=self.catdata[::10]
+#        self.catdata=self.catdata[::10]
         self.catdata.astype('d').tofile(self.matfilename+'_cattrace.bin')        
         
        
@@ -649,11 +652,95 @@ class GUIForm(QtGui.QMainWindow):
         if key == QtCore.Qt.Key_Left:
             self.previousevent()            
         if key == QtCore.Qt.Key_Return:
-            self.Load()  
+            self.Load()
+        if key == QtCore.Qt.Key_Space:
+            self.analyze()  
         
-    def saveasmat(self):
-        io.savemat(self.matfilename+'py.mat',{'test':self.data})
+    def saveeventfits(self):
+        if self.catdata==[]:
+            self.showcattrace
+<<<<<<< HEAD:Pythion.py
+<<<<<<< HEAD:Pythion.py
+        self.catdata.astype('d').tofile(self.matfilename+'_cattrace.bin')  
+        
+        
+#_________________________________________________________________________
+    def objfunc(self, params, t, data):
+    
+        tau = params['tau'].value
+        mu1 = params['mu1'].value
+        mu2 = params['mu2'].value
+        a = params['a'].value
+        b = params['b'].value
+    		    
+        model = self.stepResponseFunc(t, tau, mu1, mu2, a, b)
+    
+        return model - data
+        
+    def heaviside(self, x):
+    	out=np.array(x)
+    
+    	out[out==0]=0.5
+    	out[out<0]=0
+    	out[out>0]=1
+    
+    	return out
+    	
+    def stepResponseFunc(self, t, tau, mu1, mu2, a, b):
+    	try:
+    		t1=(np.exp((mu1-t)/tau)-1)*self.heaviside(t-mu1)
+    		t2=(1-np.exp((mu2-t)/tau))*self.heaviside(t-mu2)
+    
+    		# Either t1, t2 or both could contain NaN due to fixed precision arithmetic errors.
+    		# In this case, we can set those values to zero.
+    		t1[np.isnan(t1)]=0
+    		t2[np.isnan(t2)]=0
+    
+    		return a*( t1+t2 ) + b
+    	except:
+    		raise       
+      
+    def bwlanalysis(self, eventnumber, eventbuffer):
+        params=Parameters()        
+#        params.add('mu1', value= self.t[startpoints[eventnumber]], vary=True)
+#        params.add('mu2', value=self.t[endpoints[eventnumber]], vary=True)
+#        p1 = params.add('a', value=(self.baseline - self.deli[eventnumber]), vary=True)
+#        p1.set(max =self.baseline - self.deli[eventnumber])
+#        params.add('b', value = self.baseline,vary = True)
+#        params.add('tau', value = 1/4166.67e3, vary=True)
+        
+        upperbound = self.baseline - self.deli[eventnumber] + 2*self.var
+        if self.baseline - self.deli[eventnumber]-2*self.var > 0:
+            lowerbound = self.baseline - self.deli[eventnumber] - 2*self.var
+        else:
+            lowerbound = 0
+        
+        params.add_many(('mu1', self.t[startpoints[eventnumber]],  True, None, None,  None),
+           ('mu2',   self.t[endpoints[eventnumber]],  True,  None,  None,  None),
+           ('a',   self.baseline - self.deli[eventnumber],  True, lowerbound, upperbound,  None),
+           ('b',   self.baseline,  True, self.baseline-2*self.var, self.baseline+2*self.var,  None),
+           ('tau',  1/self.LPfiltercutoff,  False,  None,  None,  None))
+        
+        
+        optfit = Minimizer(self.objfunc, params, fcn_args=(self.t[startpoints[eventnumber]-eventbuffer:endpoints[eventnumber]+eventbuffer],
+                     self.data[startpoints[eventnumber]-eventbuffer:endpoints[eventnumber]+eventbuffer],))
+        optfit.prepare_fit()
+        optfit.leastsq()
+        
+        return optfit.params['b'].value  - optfit.params['a'].value        
+ 
+=======
+        self.catdata.astype('d').tofile(self.matfilename+'_catfit.bin')   
+>>>>>>> FETCH_HEAD:main.py
+=======
+        self.catdata.astype('d').tofile(self.matfilename+'_catfit.bin')   
+>>>>>>> FETCH_HEAD:main.py
 
+def start():
+    app = QtGui.QApplication(sys.argv)
+    myapp = GUIForm()
+    myapp.show()
+    sys.exit(app.exec_())
 
  
 if __name__ == "__main__":
