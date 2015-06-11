@@ -2,15 +2,7 @@
 
 # Form implementation generated from reading ui file 'plotgui.ui'
 #
-<<<<<<< HEAD
-<<<<<<< HEAD
 # Created: Tue Jan 20 09:56:46 2015
-=======
-# Created: Fri Jan 16 11:16:00 2015
->>>>>>> FETCH_HEAD
-=======
-# Created: Fri Jan 16 11:16:00 2015
->>>>>>> origin/master
 #      by: PyQt4 UI code generator 4.9.6
 #
 # WARNING! All changes made in this file will be lost!
@@ -156,7 +148,7 @@ class Ui_PythIon(object):
         sizePolicy.setHeightForWidth(self.eventplot.sizePolicy().hasHeightForWidth())
         self.eventplot.setSizePolicy(sizePolicy)
         font = QtGui.QFont()
-        font.setFamily(_fromUtf8("Arial"))
+        font.setFamily(_fromUtf8("Kozuka Gothic Pro L"))
         font.setPointSize(20)
         font.setBold(False)
         font.setItalic(False)
@@ -172,7 +164,7 @@ class Ui_PythIon(object):
         sizePolicy.setHeightForWidth(self.scatterplot.sizePolicy().hasHeightForWidth())
         self.scatterplot.setSizePolicy(sizePolicy)
         font = QtGui.QFont()
-        font.setFamily(_fromUtf8("Arial"))
+        font.setFamily(_fromUtf8("Kozuka Gothic Pro L"))
         font.setPointSize(20)
         font.setBold(False)
         font.setItalic(False)

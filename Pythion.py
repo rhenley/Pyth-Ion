@@ -32,7 +32,6 @@ class GUIForm(QtGui.QMainWindow):
         QtCore.QObject.connect(self.ui.savetracebutton, QtCore.SIGNAL('clicked()'), self.savetrace)
         QtCore.QObject.connect(self.ui.showcatbutton, QtCore.SIGNAL('clicked()'), self.showcattrace)
         QtCore.QObject.connect(self.ui.savecatbutton, QtCore.SIGNAL('clicked()'), self.savecattrace)
-        QtCore.QObject.connect(self.ui.saveasmatbutton, QtCore.SIGNAL('clicked()'), self.saveeventfits)
         
         QtCore.QObject.connect(self.ui.gobutton, QtCore.SIGNAL('clicked()'), self.inspectevent)
         QtCore.QObject.connect(self.ui.previousbutton, QtCore.SIGNAL('clicked()'), self.previousevent)
@@ -331,15 +330,7 @@ class GUIForm(QtGui.QMainWindow):
             
         #plot event trace
         self.p3.plot(self.t[startpoints[eventnumber]-eventbuffer:endpoints[eventnumber]+eventbuffer],
-<<<<<<< HEAD:Pythion.py
-<<<<<<< HEAD:Pythion.py
-                     self.data[startpoints[eventnumber]-eventbuffer:endpoints[eventnumber]+eventbuffer], pen=None, symbol='o',symbolBrush='b',symbolSize=2)
-=======
-                     self.data[startpoints[eventnumber]-eventbuffer:endpoints[eventnumber]+eventbuffer],pen='b')
->>>>>>> FETCH_HEAD:main.py
-=======
-                     self.data[startpoints[eventnumber]-eventbuffer:endpoints[eventnumber]+eventbuffer],pen='b')
->>>>>>> origin/master:main.py
+                     self.data[startpoints[eventnumber]-eventbuffer:endpoints[eventnumber]+eventbuffer], pen='b')
                      
         #plot event fit
         self.p3.plot(self.t[startpoints[eventnumber]-eventbuffer:endpoints[eventnumber]+eventbuffer],np.concatenate((
@@ -353,19 +344,10 @@ class GUIForm(QtGui.QMainWindow):
         colors[self.totalplotpoints-self.numberofevents+eventnumber]= pg.mkColor('r')
         self.p2.setBrush(colors, mask=None)
 
-<<<<<<< HEAD:Pythion.py
-<<<<<<< HEAD:Pythion.py
 
         #Mark event start and end points
         self.p3.plot([self.t[startpoints[eventnumber]], self.t[startpoints[eventnumber]]],[self.data[startpoints[eventnumber]], self.data[startpoints[eventnumber]]],pen=None, symbol='o',symbolBrush='g',symbolSize=7)
         self.p3.plot([self.t[endpoints[eventnumber]], self.t[endpoints[eventnumber]]],[self.data[endpoints[eventnumber]], self.data[endpoints[eventnumber]]],pen=None, symbol='o',symbolBrush='r',symbolSize=7)
-=======
-=======
->>>>>>> origin/master:main.py
-        #Mark event start and end points
-        self.p3.plot([self.t[startpoints[eventnumber]], self.t[startpoints[eventnumber]]],[self.data[startpoints[eventnumber]], self.data[startpoints[eventnumber]]],pen=None, symbol='o',symbolBrush='g',symbolSize=5)
-        self.p3.plot([self.t[endpoints[eventnumber]], self.t[endpoints[eventnumber]]],[self.data[endpoints[eventnumber]], self.data[endpoints[eventnumber]]],pen=None, symbol='o',symbolBrush='r',symbolSize=5)
->>>>>>> FETCH_HEAD:main.py
 
         self.ui.eventinfolabel.setText('Dwell Time=' + str(round(self.dwell[eventnumber],2))+ u' μs,   Deli='+str(round(self.deli[eventnumber],2)) +' nA')
         self.lastevent=eventnumber
@@ -609,14 +591,8 @@ class GUIForm(QtGui.QMainWindow):
         self.catfits=np.concatenate((np.repeat(np.array([self.baseline]),eventbuffer),np.repeat(np.array([
             self.baseline-self.deli[0]]),endpoints[0]-startpoints[0]),
             np.repeat(np.array([self.baseline]),eventbuffer)),0)
-<<<<<<< HEAD:Pythion.py
-<<<<<<< HEAD:Pythion.py
         eventstruct = self.catdata                  
         
-=======
->>>>>>> FETCH_HEAD:main.py
-=======
->>>>>>> origin/master:main.py
         for i in range(numberofevents):
             if i<numberofevents-1:
                 if endpoints[i]+eventbuffer>startpoints[i+1]:
@@ -625,30 +601,16 @@ class GUIForm(QtGui.QMainWindow):
                     self.catdata=np.concatenate((self.catdata,self.data[startpoints[i]-eventbuffer:endpoints[i]+eventbuffer]),0)
                     self.catfits=np.concatenate((self.catfits,np.concatenate((np.repeat(np.array([self.baseline]),eventbuffer),np.repeat(np.array([
                         self.baseline-self.deli[i]]),endpoints[i]-startpoints[i]),np.repeat(np.array([self.baseline]),eventbuffer)),0)),0)
-<<<<<<< HEAD:Pythion.py
-<<<<<<< HEAD:Pythion.py
                     eventstruct  = [np.array(self.data[startpoints[i]-eventbuffer:endpoints[i]+eventbuffer]) for i in range(numberofevents)]
                     
-=======
->>>>>>> FETCH_HEAD:main.py
-=======
->>>>>>> origin/master:main.py
         self.tcat=np.arange(0,len(self.catdata))
         self.tcat=self.tcat/self.outputsamplerate        
         
         self.p1.clear()
         self.p1.plot(self.tcat,self.catdata,pen='b')
-<<<<<<< HEAD:Pythion.py
-<<<<<<< HEAD:Pythion.py
         self.p1.plot(self.tcat,self.catfits,pen=pg.mkPen(color=(173,27,183),width=1))
         self.p1.autoRange()                
         
-=======
-=======
->>>>>>> origin/master:main.py
-        self.p1.plot(self.tcat,self.catfits,pen=pg.mkPen(color=(173,27,183),width=2))
-        self.p1.autoRange()
->>>>>>> FETCH_HEAD:main.py
  
     def savecattrace(self):
         if self.catdata==[]:
@@ -675,9 +637,6 @@ class GUIForm(QtGui.QMainWindow):
     def saveeventfits(self):
         if self.catdata==[]:
             self.showcattrace
-<<<<<<< HEAD:Pythion.py
-<<<<<<< HEAD:Pythion.py
-<<<<<<< HEAD:Pythion.py
         self.catdata.astype('d').tofile(self.matfilename+'_cattrace.bin')  
         
         
@@ -746,22 +705,12 @@ class GUIForm(QtGui.QMainWindow):
         
         return optfit.params['b'].value  - optfit.params['a'].value        
  
-=======
-        self.catdata.astype('d').tofile(self.matfilename+'_catfit.bin')   
->>>>>>> FETCH_HEAD:main.py
-=======
-        self.catdata.astype('d').tofile(self.matfilename+'_catfit.bin')   
->>>>>>> FETCH_HEAD:main.py
 
 def start():
     app = QtGui.QApplication(sys.argv)
     myapp = GUIForm()
     myapp.show()
     sys.exit(app.exec_())
-=======
-        self.catdata.astype('d').tofile(self.matfilename+'_catfit.bin')   
-
->>>>>>> origin/master:main.py
 
  
 if __name__ == "__main__":
