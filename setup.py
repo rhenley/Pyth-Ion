@@ -6,7 +6,7 @@ from os import path
 APP = ['Pythion']
 
 setup(name='Pythion',
-      version='1.0',
+      version='1.1',
       description='Nanopore Data Analysis Package',
       author='Robert Henley',
       author_email='roberthenley89@gmail.com',
