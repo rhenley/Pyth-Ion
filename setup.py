@@ -1,17 +1,14 @@
-from setuptools import setup, find_packages
-# To use a consistent encoding
-from codecs import open
-from os import path
+from distutils.core import setup
+from distutils.extension import Extension
+import numpy as np
+from Cython.Distutils import build_ext
 
-APP = ['Pythion']
-
-setup(name='Pythion',
-      version='1.1',
-      description='Nanopore Data Analysis Package',
-      author='Robert Henley',
-      author_email='roberthenley89@gmail.com',
-      url='https://github.com/rhenley/Pyth-Ion/', 
-      packages=find_packages()
-#      data_files=[('C:\Users\rober\Documents\GitHub\Pyth-Ion', 
-#                   ['3500bp-200mV.mat','3500bp-200mV.log'])]
-     )
+setup(
+    name='PythIon',
+    version='0.2.0',
+    author='Robert Henley',
+    author_email='roberthenley89@gmail.com',
+    packages=['PythIon'],
+    description='Nanopore Data Analysis package.'
+    
+)

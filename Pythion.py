@@ -6,9 +6,9 @@ from scipy import ndimage
 import os
 from scipy import signal
 from scipy import io as spio
-from PlotGUI import *
+#from PlotGUI import *
 #from plotgui4k import *
-#from plotguiretina import *
+from plotguiretina import *
 import pyqtgraph as pg
 import pandas.io.parsers
 import pandas as pd
