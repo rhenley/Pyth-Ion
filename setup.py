@@ -9,6 +9,4 @@ setup(
     author='Robert Henley',
     author_email='roberthenley89@gmail.com',
     package_dir=['PythIon'],
-    description='Nanopore Data Analysis package.'
-    
-)
+    description='Nanopore Data Analysis package.')
