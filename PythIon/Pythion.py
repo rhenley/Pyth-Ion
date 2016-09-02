@@ -108,8 +108,8 @@ class GUIForm(QtGui.QMainWindow):
         self.p3.hideAxis('bottom')
         self.p3.hideAxis('left')
 
-
-        self.logo=ndimage.imread(os.getcwd()+os.sep+"pythionlogo.png")
+        dir_path = os.path.dirname(os.path.realpath(__file__))
+        self.logo=ndimage.imread(dir_path + os.sep + "pythionlogo.png")
         self.logo=np.rot90(self.logo,-1)
         self.logo = pg.ImageItem(self.logo)
         self.p3.addItem(self.logo)
