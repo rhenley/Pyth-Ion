@@ -8,7 +8,7 @@ setup(
     version='0.2.0',
     author='Robert Henley',
     author_email='roberthenley89@gmail.com',
-    packages=['PythIon'],
+    package_dir=['PythIon'],
     description='Nanopore Data Analysis package.'
     
 )
