@@ -550,7 +550,8 @@ class GUIForm(QtGui.QMainWindow):
         self.savetarget()
 
     def save(self):
-         np.savetxt(self.matfilename+'DB.txt',np.column_stack((self.deli,self.frac,self.dwell,self.dt,self.noise)),delimiter='\t')
+         np.savetxt(self.matfilename+'DB.txt',np.column_stack((self.deli,self.frac,self.dwell,self.dt,self.noise)),delimiter='\t',
+                    header= "deli" + '\t' + "frac" + '\t' +"dwell" + '\t'+"dt"+ '\t' + 'stdev')
 
     def inspectevent(self, clicked = []):
 
@@ -826,7 +827,9 @@ class GUIForm(QtGui.QMainWindow):
             self.save()
             self.savetarget()
         if self.analyzetype == 'fine':
-            np.savetxt(self.matfilename+'llDB.txt',np.column_stack((self.deli,self.frac,self.dwell,self.dt)),delimiter='\t')
+            np.savetxt(self.matfilename+'llDB.txt',
+                       np.column_stack((self.deli,self.frac,self.dwell,self.dt, self.noise)),
+                       delimiter='\t',header= "deli" + '\t' + "frac" + '\t' +"dwell" + '\t'+"dt"+ '\t' + 'stdev')
 
     def invertdata(self):
         self.p1.clear()
@@ -862,13 +865,10 @@ class GUIForm(QtGui.QMainWindow):
         else:
             textfilenames =QtGui.QFileDialog.getOpenFileNames(self, 'Open file',self.direc,'*.txt')[0]
             self.direc=os.path.dirname(textfilenames[0])
+            
         i=0
         while i<len(textfilenames):
-            temptextdata=np.fromfile(str(textfilenames[i]),sep='\t')
-            try:
-                temptextdata=np.reshape(temptextdata,(len(temptextdata)/5,5))
-            except ValueError:
-                temptextdata=np.reshape(temptextdata,(len(temptextdata)/4,4))
+            temptextdata=np.loadtxt(str(textfilenames[i]),delimiter='\t')
             if i==0:
                 newtextdata=temptextdata
             else:
@@ -876,7 +876,8 @@ class GUIForm(QtGui.QMainWindow):
             i=i+1
 
         newfilename = QtGui.QFileDialog.getSaveFileName(self, 'New File name',self.direc,'*.txt')[0]
-        np.savetxt(str(newfilename),newtextdata,delimiter='\t')
+        np.savetxt(str(newfilename),newtextdata,delimiter='\t',
+                   header= "deli" + '\t' + "frac" + '\t' +"dwell" + '\t'+"dt"+ '\t' + 'stdev')
 
     def nextfile(self):
         if str(os.path.splitext(self.datafilename)[1])=='.log':
@@ -1159,7 +1160,7 @@ class GUIForm(QtGui.QMainWindow):
             self.dt = np.array(batchinfo.dt[np.isfinite(batchinfo.dt)])
             startpoints = np.array(batchinfo.startpoints[np.isfinite(batchinfo.startpoints)])
             endpoints = np.array(batchinfo.endpoints[np.isfinite(batchinfo.endpoints)])
-#            self.noise = (10**10)*np.array([np.std(self.data[int(x):int(batchinfo.endpoints[i])])for i,x in enumerate(batchinfo.startpoints)])
+            self.noise = (10**10)*np.array([np.std(self.data[int(x):int(batchinfo.endpoints[i])])for i,x in enumerate(batchinfo.startpoints)])
 
 
             frac = self.frac
@@ -1212,6 +1213,7 @@ class GUIForm(QtGui.QMainWindow):
 
             self.dwell = self.dwell[np.isfinite(deli)]
             self.dt = self.dt[np.isfinite(deli)]
+            self.noise = self.noise[np.isfinite(deli)]
             frac = frac[np.isfinite(deli)]
             startpoints = startpoints[np.isfinite(deli)]
             endpoints = endpoints[np.isfinite(deli)]
@@ -1220,7 +1222,9 @@ class GUIForm(QtGui.QMainWindow):
             self.deli = deli
             self.frac = frac
 
-            np.savetxt(self.matfilename+'llDB.txt',np.column_stack((deli,frac,self.dwell,self.dt)),delimiter='\t')
+            np.savetxt(self.matfilename+'llDB.txt',
+                       np.column_stack((deli,frac,self.dwell,self.dt,self.noise)),
+                       delimiter='\t',header= "deli" + '\t' + "frac" + '\t' +"dwell" + '\t'+"dt"+ '\t' + 'stdev')
         
         self.p1.autoRange()
         self.cusumthresh = cusumthresh
