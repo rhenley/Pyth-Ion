@@ -11,7 +11,7 @@ class batchprocesser(QtGui.QWidget):
         self.uibp = Ui_batchinfodialog()
         self.uibp.setupUi(self)
         
-        QtCore.QObject.connect(self.uibp.cancelbutton, QtCore.SIGNAL('clicked()'), self.close)
+        self.uibp.cancelbutton.clicked.connect(self.close)
         
     def close(self):
         self.destroy()

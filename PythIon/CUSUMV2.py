@@ -1,8 +1,7 @@
 import numpy as np
-import pyqtgraph as pg
 
-
-def detect_cusum(data, basesd, dt, threshhold = 10, stepsize = 3, minlength = 1000, maxstates = -1):
+def detect_cusum(data, basesd, dt, threshhold = 10, stepsize = 3, 
+                 minlength = 1000, maxstates = -1):
 
 #    dt = 1
 #    threshhold = 1
@@ -27,6 +26,8 @@ def detect_cusum(data, basesd, dt, threshhold = 10, stepsize = 3, minlength = 10
     varM = data[0]
     varS = 0
     mean = data[0]
+    sThreshhold = threshhold
+    sStepSize = stepsize
 
     while k < length-1:
             k += 1
@@ -64,8 +65,8 @@ def detect_cusum(data, basesd, dt, threshhold = 10, stepsize = 3, minlength = 10
                     varM = data[anchor]
                     varS = 0
             if maxstates > 0:
-                if nStates > 10:
-                    print 'too sensitive'
+                if nStates > maxstates:
+                    print('too sensitive')
                     nStates = 0
                     k = 0
                     stepsize = stepsize*1.1
@@ -86,12 +87,13 @@ def detect_cusum(data, basesd, dt, threshhold = 10, stepsize = 3, minlength = 10
                     varM = data[0]
                     varS = 0
                     mean = data[0]
+                    
     edges = np.append(edges, len(data)) #mark the end of the event as an edge
     nStates += 1
 
 
     cusum = dict()
-    cusum['CurrentLevels'] = [np.average(data[edges[i]+minlength:edges[i+1]]) for i in range(nStates)] #detect current levels during detected sub-events
+    cusum['CurrentLevels'] = [np.average(data[int(edges[i]+minlength):int(edges[i+1])]) for i in range(nStates)] #detect current levels during detected sub-events
     cusum['EventDelay'] = edges * dt #locations of sub-events in the data
     cusum['Threshold'] = threshhold #record the threshold used
     cusum['stepsize'] = stepsize
