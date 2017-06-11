@@ -203,10 +203,12 @@ class GUIForm(QtGui.QMainWindow):
 
         if str(os.path.splitext(self.datafilename)[1])=='.opt':
             self.data = np.fromfile(self.datafilename, dtype = np.dtype('>d'))
-            self.matfilename = str(os.path.splitext(self.datafilename)[0])  
-            
+            self.matfilename = str(os.path.splitext(self.datafilename)[0])
             try:
-                self.mat = spio.loadmat(self.matfilename + '_inf')  
+                self.mat = spio.loadmat(self.matfilename + '_inf')
+                matstruct = self.mat[os.path.basename(self.matfilename)]
+                matstruct.shape
+                self.mat = matstruct[0][0]
                 samplerate = np.float64(self.mat['samplerate'])
                 filtrate = np.float64(self.mat['filterfreq'])
             except TypeError:
@@ -874,7 +876,7 @@ class GUIForm(QtGui.QMainWindow):
 
         newfilename = QtGui.QFileDialog.getSaveFileName(self, 'New File name',self.direc,'*.txt')[0]
         np.savetxt(str(newfilename),newtextdata,delimiter='\t',
-                   header= "dI" + '\t' + "fr" + '\t' +"dwe"+ '\t'+"dt"+ '\t' + 'stdev')
+                   header= "dI" + '\t' + "fr" + '\t' +"dw"+ '\t'+"dt"+ '\t' + 'stdev')
 
     def nextfile(self):
         if str(os.path.splitext(self.datafilename)[1])=='.log':
@@ -1106,8 +1108,8 @@ class GUIForm(QtGui.QMainWindow):
         cusumstep = np.float64(self.bp.uibp.cusumstepentry.text())
         cusumthresh = np.float64(self.bp.uibp.cusumthreshentry.text())
         self.maxstates = np.int(self.bp.uibp.maxLevelsBox.text())
-        selfcorrect = np.int(self.bp.uibp.selfCorrectCheckBox.checkState())
-        
+        selfcorrect = self.bp.uibp.selfCorrectCheckBox.isChecked()
+
         try:
             ######## attempt to open dialog from most recent directory########
             self.filelist = QtGui.QFileDialog.getOpenFileNames(self,'Select Files',self.direc,("*.pkl"))[0]
@@ -1166,8 +1168,8 @@ class GUIForm(QtGui.QMainWindow):
  
             with pg.ProgressDialog("Analyzing...", 0, len(self.dwell)) as dlg:               
                for i,dwell in enumerate(self.dwell):
-                    toffset = (eventtime[-1] + .75*eventbuffer)/self.outputsamplerate
-                    if i < len(self.dt)-1 and dwell > self.mindwell and self.frac[i] >self.minfrac:
+                    toffset = (eventtime[-1] + eventbuffer)/self.outputsamplerate
+                    if i < len(self.dt)-1 and dwell > self.mindwell and frac[i] >self.minfrac:
                         if endpoints[i]+eventbuffer>startpoints[i+1]:
                             print('overlapping event')
                             frac[i] = np.NaN
@@ -1175,12 +1177,12 @@ class GUIForm(QtGui.QMainWindow):
                             
                         else:
                             eventdata = self.data[int(startpoints[i]-eventbuffer):int(endpoints[i]+eventbuffer)]
-                            eventtime = np.arange(0,len(eventdata)) + .75*eventbuffer + eventtime[-1]
-                            self.p1.plot(eventtime/self.outputsamplerate, eventdata,pen='b')
+                            eventtime = np.arange(0,len(eventdata)) + eventbuffer + eventtime[-1]
+#                            self.p1.plot(eventtime/self.outputsamplerate, eventdata,pen='b')
                             cusum = detect_cusum(eventdata, np.std(eventdata[0:eventbuffer]),
                                 1/self.outputsamplerate, threshhold  = cusumthresh,
-                                stepsize = cusumstep, 
-                                minlength = self.minlevelt*self.outputsamplerate, 
+                                stepsize = cusumstep,
+                                minlength = self.minlevelt*self.outputsamplerate,
                                 maxstates = self.maxstates)
                             
                             while len(cusum['CurrentLevels']) < 3:
@@ -1189,21 +1191,22 @@ class GUIForm(QtGui.QMainWindow):
                                 cusum = detect_cusum(eventdata, basesd = np.std(eventdata[0:eventbuffer])
                                     , dt = 1/self.outputsamplerate, threshhold  = cusumthresh
                                     , stepsize = cusumstep, minlength = self.minlevelt*self.outputsamplerate, maxstates = self.maxstates)
+                                print('Not Sensitive Enough')
     
                                 
                             frac[i] = (np.max(cusum['CurrentLevels'])-np.min(cusum['CurrentLevels']))/np.max(cusum['CurrentLevels'])
                             deli[i] = (np.max(cusum['CurrentLevels'])-np.min(cusum['CurrentLevels'])) 
                             
-                            if self.bp.uibp.selfCorrectCheckBox.checkState() == 1:                       
+                            if selfcorrect:
                                 cusumthresh = cusum['Threshold']
                                 cusumstep = cusum['stepsize']
 ######################  Plotting   #########################                                                    
-                            for j,level in enumerate(cusum['CurrentLevels']):
-                                self.p1.plot(y = 2*[level], x = toffset + cusum['EventDelay'][j:j+2], pen = pg.mkPen( 'r', width = 5))
-                                try:
-                                    self.p1.plot(y = cusum['CurrentLevels'][j:j+2], x = toffset + 2*[cusum['EventDelay'][j+1]], pen = pg.mkPen( 'r', width = 5))
-                                except Exception:
-                                    pass
+ #                           for j,level in enumerate(cusum['CurrentLevels']):
+ #                               self.p1.plot(y = 2*[level], x = toffset + cusum['EventDelay'][j:j+2], pen = pg.mkPen( 'r', width = 5))
+ #                               try:
+ #                                   self.p1.plot(y = cusum['CurrentLevels'][j:j+2], x = toffset + 2*[cusum['EventDelay'][j+1]], pen = pg.mkPen( 'r', width = 5))
+ #                               except Exception:
+ #                                   pass
                     dlg += 1
 ######################  End Plotting   #########################                                                    
 
